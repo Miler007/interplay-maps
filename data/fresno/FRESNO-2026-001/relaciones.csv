@@ -1,0 +1,25 @@
+source_code,source_type,target_code,target_type,relationship_type,details
+2.2,caja,2.1,caja,drop_feed,Alimentada con Drop desde caja 2.2 hilo naranja
+2.4,caja,2.5,caja,fiber_feed,"Lo alimenta hilo verde desde caja 2.4"
+3.8,caja,3.8.1,caja,drop_feed,Conectada con drop desde la 3.8
+1.3,caja,B.1.7,subcaja,location,"Caja libre al pie de la 1.3"
+3.4,caja,B.3.1,subcaja,drop_feed,"Hilo blanco desde caja 3.4 alimenta Drop para caja B.3.1"
+3.7,caja,B.3.2.1,subcaja,drop_feed,"Hilo rojo de caja 3.7 con spliter de 1x2 alimenta caja 8 puertos #1 - B.3.2 con Drop"
+3.7,caja,B.3.2.2,subcaja,drop_feed,"Hilo rojo de caja 3.7 con spliter de 1x2 alimenta caja 8 puertos #2 - B.3.2 con Drop"
+3.8,caja,B.3.3,subcaja,drop_feed,"Hilo Negro en caja 3.8 alimenta por Drop caja B.3.3"
+3.8,caja,B.3.4,subcaja,drop_feed,"Hilo amarillo de caja 3.8 alimenta con Drop caja B.3.4"
+3.1,caja,B.3.5,subcaja,drop_feed,"Sale del spliter B.3 con hilo verde de caja 3.1 hasta caja 3.3 y se fusiona con Drop para caja B.3.5"
+3.3,caja,B.3.5,subcaja,fusion,Parte del recorrido del hilo verde desde 3.1
+2.3,caja,B.3.7.1,subcaja,drop_feed,"Sale de caja 2.3 alimenta hilo rojo y sale por un Drop para caja B.3.7 8puertos #1"
+B.3.7.1,subcaja,B.3.7.2,subcaja,spliter_feed,"Sale de caja B.3.7 8 puertos #1 con spliter 1x2 sale por un Drop para caja B.3.7 8puertos #2"
+2.7,caja,B.3.8,subcaja,drop_feed,"Sale de caja 2.7 hilo negro se fusiona con Drop para caja B.3.8"
+4.8,caja,B.4.4,subcaja,drop_feed,"Sale de caja 4.8 hilo azul se fusiona con Drop para caja B.4.4"
+5.4,caja,B.4.5,subcaja,drop_feed,"Hilo negro desde caja 5.4 alimenta Drop para caja B.4.5"
+7.1,caja,B.5.1,subcaja,drop_feed,"Sale de spliter B.5 de caja 7.1 y alimenta un Drop para caja B.5.1"
+7.1,caja,B.5.2,subcaja,drop_feed,"Sale de spliter B.5 de caja 7.1 y alimenta un Drop para caja B.5.2"
+mufla,infrastructure,B.6.1,subcaja,drop_feed,"Hilo negro desde mufla hasta caja 13.2 alimenta Drop para caja B.6.1"
+13.2,caja,B.6.1,subcaja,drop_feed,Hilo negro desde mufla pasa por 13.2
+14.4,caja,B.6.2,subcaja,drop_feed,"Hilo rojo desde caja 14.4 hasta caja 14.5 y alimenta Drop para caja B.6.2"
+14.5,caja,B.6.2,subcaja,passthrough,Ruta del hilo rojo desde 14.4 hacia B.6.2
+14.6,caja,B.6.3,subcaja,drop_feed,"Hilo negro desde caja 14.6 alimenta un Drop para caja B.6.3"
+15.6,caja,B.6.4,subcaja,drop_feed,"Hilo naranja desde caja 15.6 alimenta un Drop para caja B.6.4"

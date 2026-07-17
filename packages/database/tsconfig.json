@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": ".",
+    "module": "commonjs",
+    "target": "ES2022"
+  },
+  "include": ["prisma/**/*"]
+}

@@ -1,0 +1,158 @@
+code,name,type,total_ports,free_ports,fiber_count,fiber_color,power,latitude,longitude,observations
+0.1,CAJA 0.1,CAJA,16,8,24,naranja,-19,5.15358,-75.038424,
+0.2,CAJA 0.2,CAJA,16,10,24,verde,-19,5.15358,-75.03783,
+0.3,CAJA 0.3,CAJA,16,6,,,-18,5.153609,-75.036983,
+0.4,CAJA 0.4,CAJA,16,6,24,azul,-20,5.153712,-75.036247,"Fibra 24, Bufer Naranja, Hilo Azul"
+0.5,CAJA 0.5,CAJA,16,4,12,cafe,-18,5.15447,-75.03626,
+0.6,CAJA 0.6,CAJA,16,8,12,azul,-18,5.15451,-75.03572,
+0.7,CAJA 0.7,CAJA,16,8,12,verde,-19,5.154716,-75.034802,
+0.8,CAJA 0.8,CAJA,16,14,12,cafe,-18,5.15436,-75.03558,
+1.1,CAJA 1.1,CAJA,16,1,,,-18,,,
+1.2,CAJA 1.2,CAJA,16,3,12,azul,-18,5.154055,-75.039559,"Fibra 12 hilos, hilo azul"
+1.3,CAJA 1.3,CAJA,16,8,24,naranja,-18,5.153604,-75.039538,"Fibra 24 hilos, Bufer Naranja, hilo naranja"
+1.4,CAJA 1.4,CAJA,16,10,12,azul,-18,,,
+1.5,CAJA 1.5,CAJA,16,8,12,cafe,-23,5.15448,-75.03863,
+1.6,CAJA 1.6,CAJA,16,6,12,naranja,-19,5.15442,-75.03785,
+1.7,CAJA 1.7,CAJA,16,10,12,verde,-19,5.1545,-75.03728,
+1.8,CAJA 1.8,CAJA,16,9,,,,,,
+2.1,CAJA 2.1,CAJA,16,16,,naranja,-6,5.15575,-75.04013,"Alimentada con Drop desde caja 2.2 hilo naranja"
+2.2,CAJA 2.2,CAJA,16,3,12,azul,-19,5.15494,-75.04016,
+2.3,CAJA 2.3,CAJA,16,0,12,azul,-18,5.15498,-75.03885,
+2.4,CAJA 2.4,CAJA,16,7,12,cafe,-18,5.15539,-75.03823,
+2.5,CAJA 2.5,CAJA,16,5,12,azul,-19,5.15511,-75.03787,"Lo alimenta hilo verde desde caja 2.4"
+2.6,CAJA 2.6,CAJA,16,8,12,cafe,-19,5.15647,-75.03785,
+2.7,CAJA 2.7,CAJA,16,0,12,gris,-19,5.15726,-75.03758,
+2.8,CAJA 2.8,CAJA,16,11,12,blanco,-19,5.15791,-75.03694,
+3.1,CAJA 3.1,CAJA,16,11,,,-18,5.15425,-75.04036,
+3.2,CAJA 3.2,CAJA,16,5,12,azul,-18,5.154133,-75.040112,
+3.3,CAJA 3.3,CAJA,16,11,12,cafe,-18,5.15345,-75.04019,
+3.4,CAJA 3.4,CAJA,16,7,12,verde,,5.154583,-75.040642,
+3.5,CAJA 3.5,CAJA,16,3,12,azul,-18,5.15359,-75.04245,
+3.6,CAJA 3.6,CAJA,16,0,12,azul,-18,5.15257,-75.04243,
+3.7,CAJA 3.7,CAJA,16,6,12,naranja,-18,5.152846,-75.042895,
+3.8,CAJA 3.8,CAJA,16,8,12,verde,-24,5.15237,-75.044,
+3.8.1,CAJA 3.8.1,CAJA,8,2,,,,-21,5.15237,-75.044,"Conectada con drop desde la 3.8. Caja adicional de 8 puertos"
+4.1,CAJA 4.1,CAJA,16,3,,,-18,5.155226,-75.034823,
+4.2,CAJA 4.2,CAJA,16,10,12,azul,-18,5.15538,-75.03403,
+4.3,CAJA 4.3,CAJA,16,3,12,rojo,-19,5.15532,-75.03564,
+4.4,CAJA 4.4,CAJA,16,5,12,negro,-18,5.155201,-75.036433,
+4.5,CAJA 4.5,CAJA,16,11,,,5.15588,-75.0365,
+4.6,CAJA 4.6,CAJA,16,2,12,azul,-19,5.15619,-75.03575,
+4.7,CAJA 4.7,CAJA,16,10,12,naranja,-19,5.157253,-75.035356,
+4.8,CAJA 4.8,CAJA,16,5,12,cafe,-19,5.15795,-75.03405,
+5.1,CAJA 5.1,CAJA,16,8,12,,-20,5.15607,-75.03481,
+5.2,CAJA 5.2,CAJA,16,6,12,azul,-20,5.156756,-75.035011,
+5.3,CAJA 5.3,CAJA,16,8,12,naranja,-20,5.15694,-75.03489,
+5.4,CAJA 5.4,CAJA,16,4,12,cafe,-20,5.1576,-75.03452,
+5.5,CAJA 5.5,CAJA,16,10,12,naranja,-20,5.156157,-75.034034,
+5.6,CAJA 5.6,CAJA,16,10,12,azul,-19,5.15567,-75.03291,
+5.7,CAJA 5.7,CAJA,16,5,12,verde,-20,5.157087,-75.033151,
+5.8,CAJA 5.8,CAJA,16,12,12,cafe,-20,5.15827,-75.03236,
+6.1,CAJA 6.1,CAJA,16,12,12,azul,-19,5.15659,-75.03628,
+6.2,CAJA 6.2,CAJA,16,12,12,cafe,-19,5.15742,-75.0366,
+6.3,CAJA 6.3,CAJA,16,10,12,verde,-20,5.15805,-75.03638,
+6.4,CAJA 6.4,CAJA,16,10,12,cafe,-20,5.160035,-75.036453,
+6.5,CAJA 6.5,CAJA,16,11,12,naranja,-22,5.156582,-75.036347,
+6.6,CAJA 6.6,CAJA,16,7,12,gris,-21,5.153631,-75.036421,
+6.7,CAJA 6.7,CAJA,16,11,12,rojo,-21,5.154438,-75.036004,
+6.8,CAJA 6.8,CAJA,16,10,12,agua_marina,-20,5.15916,-75.03303,
+7.1,CAJA 7.1,CAJA,16,1,12,mufla,-23.7,5.15223,-75.03377,"Fibra 12 hilos caja mufla"
+7.2,CAJA 7.2,CAJA,16,6,12,azul_agua_marina,-24,5.15227,-75.03303,"Fibra 12 hilos hilo azul agua marina"
+7.3,CAJA 7.3,CAJA,16,2,12,agua_marina,-24,5.15222,-75.03423,
+7.4,CAJA 7.4,CAJA,16,12,12,azul,-18,5.15128,-75.03367,
+7.5,CAJA 7.5,CAJA,16,12,12,cafe,-19,5.15101,-75.03359,
+7.6,CAJA 7.6,CAJA,16,11,12,verde,-19,5.15085,-75.03351,
+7.7,CAJA 7.7,CAJA,16,8,12,cafe,-22,5.15072,-75.03268,
+8.1,CAJA 8.1,CAJA,16,11,12,mufla,-25,5.15227,-75.0319,"Fibra 12 hilos caja mufla"
+8.2,CAJA 8.2,CAJA,16,9,12,azul,-25,5.15202,-75.03204,
+8.3,CAJA 8.3,CAJA,16,8,12,azul,25.4,5.1527,-75.03229,
+8.4,CAJA 8.4,CAJA,16,8,12,amarillo,25.7,5.15228,-75.03145,
+8.5,CAJA 8.5,CAJA,16,13,12,morado,-25.3,5.1522,-75.03046,
+8.7,CAJA 8.7,CAJA,16,13,12,rosado,-26,5.15257,-75.03015,
+8.8,CAJA 8.8,CAJA,16,13,12,mufla,-25,5.15302,-75.03011,"Fibra 12 hilos caja mufla"
+9.0,CAJA 9.0,CAJA,16,15,12,azul,-28,5.15094,-75.02472,"Enviado como 'CAJA 9'"
+9.1,CAJA 9.1,CAJA,16,13,12,mufla,-23.58,5.15203,-75.03005,"Fibra 12 hilos caja mufla"
+9.2,CAJA 9.2,CAJA,16,14,12,azul,-23,5.15197,-75.02928,
+9.3,CAJA 9.3,CAJA,16,13,12,cafe,-23,5.15146,-75.02964,
+9.4,CAJA 9.4,CAJA,16,14,12,verde,23,5.1507,-75.02879,
+9.5,CAJA 9.5,CAJA,16,13,12,azul,24,5.15135,-75.02845,
+9.6,CAJA 9.6,CAJA,16,12,12,cafe,24,5.150794,-75.028318,
+9.7,CAJA 9.7,CAJA,16,14,12,gris,24,5.150808,-75.028067,
+9.8,CAJA 9.8,CAJA,16,8,12,morado,-28,5.15156,-75.02601,
+10.1,CAJA 10.1,CAJA,16,12,12,verde,-22,5.15291,-75.03135,
+10.2,CAJA 10.2,CAJA,16,13,12,cafe,-22,5.1531,-75.03116,
+10.3,CAJA 10.3,CAJA,16,13,12,azul,-22,5.15309,-75.03047,
+10.4,CAJA 10.4,CAJA,16,14,12,cafe,-22,5.15341,-75.03099,
+10.5,CAJA 10.5,CAJA,16,12,12,azul,-22,5.15346,-75.03023,
+10.6,CAJA 10.6,CAJA,16,10,12,azul,-22,5.15292,-75.02947,
+10.7,CAJA 10.7,CAJA,16,15,12,cafe,-22,5.15269,-75.02948,
+11.1,CAJA 11.1,CAJA,16,5,24,azul,,5.15215,-75.03533,"Fibra 24h bufer naranja hilo azul"
+11.2,CAJA 11.2,CAJA,16,8,12,,-19,5.152156,-75.034645,
+11.3,CAJA 11.3,CAJA,16,12,24,verde,-19,5.152446,-75.03466,
+11.4,CAJA 11.4,CAJA,16,5,12,azul,-19,5.152084,-75.035373,
+11.5,CAJA 11.5,CAJA,16,7,12,azul,-19,5.15442,-75.03389,
+11.6,CAJA 11.6,CAJA,16,4,24,,-19,5.153777,-75.03556,"Fibra 24 (color no especificado)"
+11.7,CAJA 11.7,CAJA,16,5,,,5.15376,-75.03556,
+12.1,CAJA 12.1,CAJA,16,10,12,azul,-18,5.1526,-75.0396,
+12.2,CAJA 12.2,CAJA,16,10,12,naranja,-19,5.1528,-75.038821,
+12.4,CAJA 12.4,CAJA,16,9,12,cafe,-18,5.152385,-75.037619,
+12.5,CAJA 12.5,CAJA,16,5,12,blanco,-18,5.15279,-75.03707,
+12.6,CAJA 12.6,CAJA,16,2,12,blanco,-18,5.153125,-75.036628,
+12.7,CAJA 12.7,CAJA,16,7,12,rojo,-18,5.1529,-75.03551,
+12.8,CAJA 12.8,CAJA,16,10,12,verde,-20,5.15297,-75.03832,
+13.1,CAJA 13.1,CAJA,16,5,12,cafe,-17,5.15121,-75.03866,
+13.2,CAJA 13.2,CAJA,16,4,48,azul,-17,5.15117,-75.03767,"Fibra 48 hilos bufer cafe hilo azul"
+13.3,CAJA 13.3,CAJA,16,11,48,naranja,-18,5.15132,-75.03693,"Fibra 48, bufer azul o cafe, hilo naranja"
+13.4,CAJA 13.4,CAJA,16,10,48,azul,-18,5.15128,-75.03625,"Fibra 48 hilos bufer cafe hilo azul"
+13.5,CAJA 13.5,CAJA,16,7,48,cafe,-18,5.15138,-75.03549,"Fibra 48 hilos bufer cafe hilo cafe"
+13.6,CAJA 13.6,CAJA,16,6,12,morado,-19,5.15144,-75.03453,
+13.7,CAJA 13.7,CAJA,16,2,12,rosado,-18,5.15143,-75.034921,
+13.8,CAJA 13.8,CAJA,16,3,12,agua_marina,-22,5.151018,-75.03476,"Fibra 12, hilo Agua Marina"
+14.1,CAJA 14.1,CAJA,16,12,12,,-19,5.151468,-75.036339,
+14.2,CAJA 14.2,CAJA,16,5,12,azul,19,5.15007,-75.03532,
+14.3,CAJA 14.3,CAJA,16,6,12,azul,-19,5.15049,-75.03596,
+14.4,CAJA 14.4,CAJA,16,6,12,naranja,-19,5.150622,-75.036848,
+14.5,CAJA 14.5,CAJA,16,3,12,azul,-19,5.15009,-75.03677,
+14.6,CAJA 14.6,CAJA,16,3,12,cafe,-19,5.151227,-75.037311,
+14.7,CAJA 14.7,CAJA,16,12,12,gris,-19,5.150612,-75.037615,
+15.1,CAJA 15.1,CAJA,16,8,12,azul,-17,5.15205,-75.03628,
+15.2,CAJA 15.2,CAJA,16,5,48,naranja,-18,5.151741,-75.036698,"Fibra 48, Bufer Cafe, Hilo Naranja"
+15.3,CAJA 15.3,CAJA,16,7,48,verde,-18,5.151752,-75.037458,"Fibra 48, Bufer Cafe, Hilo verde"
+15.4,CAJA 15.4,CAJA,16,10,12,,19,5.15181,-75.03874,
+15.5,CAJA 15.5,CAJA,16,8,12,cafe,-17,5.152343,-75.038848,
+15.6,CAJA 15.6,CAJA,16,2,12,azul,,5.152343,-75.038848,
+15.7,CAJA 15.7,INACCESIBLE,,,,,,,,No se pudo limpiar - poste metalico en mal estado base podrida
+15.8,CAJA 15.8,CAJA,16,3,12,azul,-19,5.15205,-75.03625,
+B.0.1,CAJA B.0.1,CAJA,16,16,,,5.15808,-75.03634,
+B.0.2,CAJA B.0.2,CAJA,16,10,12,amarillo,-22,5.153631,-75.036421,
+B.0.3,CAJA B.0.3,CAJA,8,2,,,5.15902,-75.03527,"Caja de 8 puertos"
+B.0.4,CAJA B.0.4,CAJA,16,5,12,rosado,-22,5.15886,-75.03456,
+B.0.5,CAJA B.0.5,CAJA,16,16,12,agua_marina,-22,5.15912,-75.03303,
+B.0.6,CAJA B.0.6,CAJA,16,4,12,verde,-22,5.156582,-75.036347,
+B.0.7,CAJA B.0.7,CAJA,16,16,12,azul,-24,5.160035,-75.036453,
+B.1.1,CAJA B.1.1,CAJA,16,12,12,azul,-18,5.15191,-75.03866,"Originalmente B-11.1"
+B.1.2,CAJA B.1.2,CAJA,16,14,12,blanco,-19,5.153533,-75.039173,
+B.1.3,CAJA B.1.3,CAJA,16,15,12,verde,-17,5.15261,-75.03866,
+B.1.4,CAJA B.1.4,CAJA,16,7,12,cafe,-20,,
+B.1.7,CAJA B.1.7,CAJA,16,16,12,rojo,-20,,"Caja libre al pie de la 1.3"
+B.2.1,CAJA B.2.1,CAJA,16,10,12,blanco,-17,5.15001,-75.03605,"Dos entradas: 1ra(11/3) 3clientes/13libres hilo cafe; 2da(13/3) 6clientes/10libres hilo blanco. Se usa la segunda."
+B.2.2,CAJA B.2.2,CAJA,16,6,12,azul,-18,5.153125,-75.036628,
+B.2.3,CAJA B.2.3,CAJA,16,9,12,cafe,-16,5.15141,-75.03543,
+B.2.4,CAJA B.2.4,CAJA,16,12,12,verde,-17,5.15198,-75.03542,
+B.3.1,CAJA B.3.1,CAJA,16,16,,,21,5.15515,-75.04084,"Hilo blanco desde caja 3.4 alimenta Drop"
+B.3.2.1,CAJA B.3.2.1,CAJA,8,8,,,21,5.15217,-75.04148,"Trilladora alto de la cruz #1. Hilo rojo de caja 3.7 con spliter 1x2"
+B.3.2.2,CAJA B.3.2.2,CAJA,8,8,,,21,5.15316,-75.04289,"La Curva alto de la cruz #2. Hilo rojo de caja 3.7 con spliter 1x2"
+B.3.3,CAJA B.3.3,CAJA,16,16,,,21,5.15236,-75.04398,"Al lado de la 3.8. Hilo Negro en caja 3.8 alimenta por Drop"
+B.3.4,CAJA B.3.4,CAJA,16,16,,,21,5.15247,-75.04511,"Hilo amarillo de caja 3.8 alimenta con Drop"
+B.3.5,CAJA B.3.5,CAJA,16,16,,,5.15336,-75.0406,"Potencia -7. Sale del spliter B.3 con hilo verde de caja 3.1 hasta caja 3.3 y se fusiona con Drop"
+B.3.7.1,CAJA B.3.7.1,CAJA,8,8,,,20,5.15539,-75.03872,"Sale de caja 2.3 alimenta hilo rojo y sale por un Drop para #1"
+B.3.7.2,CAJA B.3.7.2,CAJA,8,8,,,20,5.15568,-75.03877,"Sale de caja B.3.7 #1 con spliter 1x2 sale por un Drop para #2"
+B.3.8,CAJA B.3.8,CAJA,16,16,,,20,5.15714,-75.03823,"Sale de caja 2.7 hilo negro se fusiona con Drop"
+B.4.4,CAJA B.4.4,CAJA,16,16,,,19,5.15799,-75.0343,"Sale de caja 4.8 hilo azul se fusiona con Drop"
+B.4.5,CAJA B.4.5,CAJA,16,16,,,20,5.15744,-75.03478,"Hilo negro desde caja 5.4 alimenta Drop"
+B.5.1,CAJA B.5.1,CAJA,16,16,,,20,5.15218,-75.03355,"Sale de spliter B.5 de caja 7.1 y alimenta un Drop"
+B.5.2,CAJA B.5.2,CAJA,16,16,,,20,5.15213,-75.03405,"Sale de spliter B.5 de caja 7.1 y alimenta un Drop"
+B.6.1,CAJA B.6.1,CAJA,16,16,,,20,5.15121,-75.03772,"Hilo negro desde mufla hasta caja 13.2 alimenta Drop"
+B.6.2,CAJA B.6.2,CAJA,16,16,,,20,5.15,-75.03705,"Hilo rojo desde caja 14.4 hasta caja 14.5 y alimenta Drop"
+B.6.3,CAJA B.6.3,CAJA,16,16,,,20,5.15014,-75.03767,"Hilo negro desde caja 14.6 alimenta un Drop"
+B.6.4,CAJA B.6.4,CAJA,16,16,,,20,5.15235,-75.04003,"Hilo naranja desde caja 15.6 alimenta un Drop"

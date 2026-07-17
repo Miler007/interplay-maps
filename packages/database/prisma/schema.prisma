@@ -1,0 +1,735 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis(map: "postgis"), uuid_ossp(map: "uuid-ossp")]
+}
+
+// ─── CORE ────────────────────────────────────────────────────
+
+model Department {
+  id             String         @id @default(uuid()) @db.Uuid
+  name           String         @unique
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+  municipalities Municipality[]
+  assets         Asset[]
+
+  @@map("departments")
+}
+
+model Municipality {
+  id           String         @id @default(uuid()) @db.Uuid
+  name         String
+  departmentId String         @map("department_id") @db.Uuid
+  department   Department     @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  northBound   Float?         @map("north_bound")
+  southBound   Float?         @map("south_bound")
+  eastBound    Float?         @map("east_bound")
+  westBound    Float?         @map("west_bound")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+  projects     Project[]
+  assets       Asset[]
+  coverageAreas CoverageArea[]
+  pilot        MunicipalityPilot?
+  baselines    MunicipalityBaseline[]
+
+  @@unique([name, departmentId])
+  @@index([departmentId])
+  @@map("municipalities")
+}
+
+model Project {
+  id             String     @id @default(uuid()) @db.Uuid
+  name           String
+  description    String?
+  municipalityId String     @map("municipality_id") @db.Uuid
+  municipality   Municipality @relation(fields: [municipalityId], references: [id], onDelete: Cascade)
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+  assets         Asset[]
+
+  @@unique([name, municipalityId])
+  @@index([municipalityId])
+  @@map("projects")
+}
+
+// ─── ASSET TYPES (Plugin) ────────────────────────────────────
+
+model AssetType {
+  id          String    @id @default(uuid()) @db.Uuid
+  code        String    @unique
+  name        String
+  prefix      String
+  icon        String?
+  geometryType String   @default("POINT") @map("geometry_type")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  assets      Asset[]
+  attributes  AttributeDefinition[]
+
+  @@map("asset_types")
+}
+
+// ─── ASSET TYPES: PLUGIN SYSTEM ──────────────────────────────
+
+model AttributeDefinition {
+  id          String   @id @default(uuid()) @db.Uuid
+  assetTypeId String   @map("asset_type_id") @db.Uuid
+  assetType   AssetType @relation(fields: [assetTypeId], references: [id], onDelete: Cascade)
+  code        String
+  name        String
+  fieldType   String   @default("TEXT") @map("field_type")
+  options     Json?    @db.JsonB
+  isRequired  Boolean  @default(false) @map("is_required")
+  sortOrder   Int      @default(0) @map("sort_order")
+  unit        String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  values      AssetAttribute[]
+
+  @@unique([assetTypeId, code])
+  @@index([assetTypeId])
+  @@map("attribute_definitions")
+}
+
+model AssetAttribute {
+  id           String              @id @default(uuid()) @db.Uuid
+  assetId      String              @map("asset_id") @db.Uuid
+  asset        Asset               @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  definitionId String              @map("definition_id") @db.Uuid
+  definition   AttributeDefinition @relation(fields: [definitionId], references: [id], onDelete: Cascade)
+  value        String
+  createdAt    DateTime            @default(now()) @map("created_at")
+  updatedAt    DateTime            @updatedAt @map("updated_at")
+
+  @@unique([assetId, definitionId])
+  @@index([assetId])
+  @@index([definitionId])
+  @@map("asset_attributes")
+}
+
+// ─── GEOMETRIES (PostGIS) ────────────────────────────────────
+
+model Geometry {
+  id        String   @id @default(uuid()) @db.Uuid
+  assetId   String   @unique @map("asset_id") @db.Uuid
+  asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  geojson   Json     @map("geojson") @db.JsonB
+  srid      Int      @default(4326)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([assetId])
+  @@map("geometries")
+}
+
+// ─── ASSETS ──────────────────────────────────────────────────
+
+model Asset {
+  id             String        @id @default(uuid()) @db.Uuid
+  code           String        @unique
+  name           String
+  assetTypeId    String        @map("asset_type_id") @db.Uuid
+  assetType      AssetType     @relation(fields: [assetTypeId], references: [id])
+  departmentId   String        @map("department_id") @db.Uuid
+  department     Department    @relation(fields: [departmentId], references: [id])
+  municipalityId String        @map("municipality_id") @db.Uuid
+  municipality   Municipality  @relation(fields: [municipalityId], references: [id])
+  projectId      String?       @map("project_id") @db.Uuid
+  project        Project?      @relation(fields: [projectId], references: [id])
+  latitude       Float?
+  longitude      Float?
+  status         AssetStatus   @default(ACTIVO)
+  certStatus     CertificationStatus @default(PENDIENTE) @map("cert_status")
+  certifiedBy    String?       @map("certified_by") @db.Uuid
+  certifiedAt    DateTime?     @map("certified_at")
+  validatedBy    String?       @map("validated_by") @db.Uuid
+  validatedAt    DateTime?     @map("validated_at")
+  observations   String?
+  currentVersion Int           @default(1) @map("current_version")
+  createdById    String?       @map("created_by") @db.Uuid
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  geometry       Geometry?
+  attributes     AssetAttribute[]
+  versions       AssetVersion[]
+  photos         AssetPhoto[]
+  healthScores   AssetHealth[]
+  confidenceScores AssetConfidence[]
+  relationshipsFrom AssetRelationship[] @relation("source")
+  relationshipsTo   AssetRelationship[] @relation("target")
+  layerAssets    LayerAsset[]
+  attachments    Attachment[]
+  capacity       CapacityInfo?
+  segmentsFrom   NetworkSegment[] @relation("SegmentSource")
+  segmentsTo     NetworkSegment[] @relation("SegmentTarget")
+  capacityHistory CapacityHistory[]
+  verifications  VerificationRecord[]
+
+  @@index([assetTypeId])
+  @@index([departmentId])
+  @@index([municipalityId])
+  @@index([projectId])
+  @@index([status])
+  @@index([certStatus])
+  @@index([latitude, longitude])
+  @@map("assets")
+}
+
+// ─── TOPOLOGY ────────────────────────────────────────────────
+
+model AssetRelationship {
+  id              String   @id @default(uuid()) @db.Uuid
+  sourceAssetId   String   @map("source_asset_id") @db.Uuid
+  sourceAsset     Asset    @relation("source", fields: [sourceAssetId], references: [id], onDelete: Cascade)
+  targetAssetId   String   @map("target_asset_id") @db.Uuid
+  targetAsset     Asset    @relation("target", fields: [targetAssetId], references: [id], onDelete: Cascade)
+  relationType    String   @map("relation_type")
+  description     String?
+  metadata        Json?    @db.JsonB
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@unique([sourceAssetId, targetAssetId, relationType])
+  @@index([sourceAssetId])
+  @@index([targetAssetId])
+  @@map("asset_relationships")
+}
+
+// ─── VERSIONING ──────────────────────────────────────────────
+
+model AssetVersion {
+  id         String   @id @default(uuid()) @db.Uuid
+  assetId    String   @map("asset_id") @db.Uuid
+  asset      Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  version    Int
+  snapshot   Json     @db.JsonB
+  changes    Json?    @db.JsonB
+  changedById String? @map("changed_by") @db.Uuid
+  changeType String?  @map("change_type")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@unique([assetId, version])
+  @@index([assetId])
+  @@map("asset_versions")
+}
+
+// ─── PHOTOS ──────────────────────────────────────────────────
+
+model AssetPhoto {
+  id            String   @id @default(uuid()) @db.Uuid
+  assetId       String   @map("asset_id") @db.Uuid
+  asset         Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  filename      String
+  originalUrl   String   @map("original_url")
+  thumbnailUrl  String   @map("thumbnail_url")
+  gpsLatitude   Float?   @map("gps_latitude")
+  gpsLongitude  Float?   @map("gps_longitude")
+  takenAt       DateTime? @map("taken_at")
+  uploadedById  String?  @map("uploaded_by") @db.Uuid
+  observations  String?
+  metadata      Json?    @db.JsonB
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([assetId])
+  @@map("asset_photos")
+}
+
+// ─── ATTACHMENTS ─────────────────────────────────────────────
+
+model Attachment {
+  id          String   @id @default(uuid()) @db.Uuid
+  assetId     String   @map("asset_id") @db.Uuid
+  asset       Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  type        String
+  filename    String
+  url         String
+  mimeType    String?  @map("mime_type")
+  sizeBytes   BigInt?  @map("size_bytes")
+  metadata    Json?    @db.JsonB
+  uploadedById String? @map("uploaded_by") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([assetId])
+  @@map("attachments")
+}
+
+// ─── NETWORK SEGMENTS (Cables) ───────────────────────────────
+
+model NetworkSegment {
+  id              String   @id @default(uuid()) @db.Uuid
+  code            String   @unique
+  name            String
+  segmentType     SegmentType @map("segment_type")
+  sourceAssetId   String   @map("source_asset_id") @db.Uuid
+  sourceAsset     Asset    @relation("SegmentSource", fields: [sourceAssetId], references: [id], onDelete: Cascade)
+  targetAssetId   String   @map("target_asset_id") @db.Uuid
+  targetAsset     Asset    @relation("SegmentTarget", fields: [targetAssetId], references: [id], onDelete: Cascade)
+  lengthMeters    Float?   @map("length_meters")
+  fiberCount      Int?     @map("fiber_count")
+  fiberColor      String?  @map("fiber_color")
+  capacityTotal   Int?     @map("capacity_total")
+  capacityUsed    Int?     @default(0) @map("capacity_used")
+  status          SegmentStatus @default(ACTIVO)
+  geojson         Json?    @db.JsonB
+  departmentId    String   @map("department_id") @db.Uuid
+  municipalityId  String   @map("municipality_id") @db.Uuid
+  projectId       String?  @map("project_id") @db.Uuid
+  observations    String?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@index([sourceAssetId])
+  @@index([targetAssetId])
+  @@index([segmentType])
+  @@index([status])
+  @@map("network_segments")
+}
+
+// ─── CAPACITY ────────────────────────────────────────────────
+
+model CapacityInfo {
+  id              String   @id @default(uuid()) @db.Uuid
+  assetId         String   @unique @map("asset_id") @db.Uuid
+  asset           Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  totalPorts      Int      @default(0) @map("total_ports")
+  usedPorts       Int      @default(0) @map("used_ports")
+  freePorts       Int      @default(0) @map("free_ports")
+  occupancyPct    Float    @default(0) @map("occupancy_pct")
+  status          CapacityStatus @default(DISPONIBLE)
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("capacity_info")
+}
+
+model CapacityHistory {
+  id         String   @id @default(uuid()) @db.Uuid
+  assetId    String   @map("asset_id") @db.Uuid
+  asset      Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  totalPorts Int      @map("total_ports")
+  usedPorts  Int      @map("used_ports")
+  freePorts  Int      @map("free_ports")
+  occupancyPct Float  @map("occupancy_pct")
+  recordedAt DateTime @default(now()) @map("recorded_at")
+
+  @@index([assetId])
+  @@index([recordedAt])
+  @@map("capacity_history")
+}
+
+// ─── COVERAGE ────────────────────────────────────────────────
+
+model CoverageArea {
+  id             String   @id @default(uuid()) @db.Uuid
+  municipalityId String   @map("municipality_id") @db.Uuid
+  municipality   Municipality @relation(fields: [municipalityId], references: [id], onDelete: Cascade)
+  name           String
+  geojson        Json     @db.JsonB
+  totalHomes     Int?     @default(0) @map("total_homes")
+  coveredHomes   Int?     @default(0) @map("covered_homes")
+  coveragePct    Float?   @default(0) @map("coverage_pct")
+  isAutoCalculated Boolean @default(true) @map("is_auto_calculated")
+  calculatedAt   DateTime @default(now()) @map("calculated_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([municipalityId])
+  @@map("coverage_areas")
+}
+
+// ─── SMART SEARCH LOG ────────────────────────────────────────
+
+model SearchQuery {
+  id         String   @id @default(uuid()) @db.Uuid
+  query      String
+  resultType String?  @map("result_type")
+  resultCount Int?    @map("result_count")
+  userId     String?  @map("user_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([query])
+  @@index([createdAt])
+  @@map("search_queries")
+}
+
+// ─── ENUMS (New) ─────────────────────────────────────────────
+
+enum SegmentType {
+  CABLE_TRONCAL
+  CABLE_DISTRIBUCION
+  DROP
+  ENLACE
+  DERIVACION
+
+  @@map("segment_type")
+}
+
+enum SegmentStatus {
+  ACTIVO
+  EN_CONSTRUCCION
+  EN_MANTENIMIENTO
+  FUERA_DE_SERVICIO
+
+  @@map("segment_status")
+}
+
+enum CapacityStatus {
+  DISPONIBLE
+  ADVERTENCIA
+  ALTA_OCUPACION
+  SIN_CAPACIDAD
+
+  @@map("capacity_status")
+}
+
+// ─── HEALTH SCORE ────────────────────────────────────────────
+
+model AssetHealth {
+  id            String   @id @default(uuid()) @db.Uuid
+  assetId       String   @map("asset_id") @db.Uuid
+  asset         Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  connectivity  Int      @default(0)
+  photos        Int      @default(0)
+  dataQuality   Int      @default(0) @map("data_quality")
+  location      Int      @default(0)
+  relationships Int      @default(0)
+  overallScore  Int      @default(0) @map("overall_score")
+  calculatedAt  DateTime @default(now()) @map("calculated_at")
+
+  @@unique([assetId, calculatedAt])
+  @@index([assetId])
+  @@map("asset_health")
+}
+
+model HealthScoreConfig {
+  id             String   @id @default(uuid()) @db.Uuid
+  indicatorCode  String   @unique @map("indicator_code")
+  name           String
+  weight         Int      @default(20)
+  isActive       Boolean  @default(true) @map("is_active")
+  updatedById    String?  @map("updated_by") @db.Uuid
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("health_score_config")
+}
+
+// ─── CONFIDENCE SCORE ────────────────────────────────────────
+
+model AssetConfidence {
+  id             String   @id @default(uuid()) @db.Uuid
+  assetId        String   @map("asset_id") @db.Uuid
+  asset          Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  score          Int      @default(0)
+  validCoords    Boolean  @default(false) @map("valid_coords")
+  nameIdentified Boolean  @default(false) @map("name_identified")
+  noDuplicates   Boolean  @default(false) @map("no_duplicates")
+  hasPhoto       Boolean  @default(false) @map("has_photo")
+  reviewedByAdmin Boolean @default(false) @map("reviewed_by_admin")
+  calculatedAt   DateTime @default(now()) @map("calculated_at")
+
+  @@index([assetId])
+  @@map("asset_confidence")
+}
+
+model ConfidenceScoreConfig {
+  id          String   @id @default(uuid()) @db.Uuid
+  factorCode  String   @unique @map("factor_code")
+  name        String
+  weight      Int      @default(20)
+  isActive    Boolean  @default(true) @map("is_active")
+  updatedById String?  @map("updated_by") @db.Uuid
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("confidence_score_config")
+}
+
+// ─── BASELINE ────────────────────────────────────────────────
+
+model MunicipalityBaseline {
+  id              String   @id @default(uuid()) @db.Uuid
+  municipalityId  String   @map("municipality_id") @db.Uuid
+  municipality    Municipality @relation(fields: [municipalityId], references: [id], onDelete: Cascade)
+  version         String
+  label           String?
+  isActive        Boolean  @default(false) @map("is_active")
+  snapshot        Json     @db.JsonB
+  totalAssets     Int      @default(0) @map("total_assets")
+  totalSegments   Int      @default(0) @map("total_segments")
+  totalRelations  Int      @default(0) @map("total_relations")
+  qualityScore    Float    @default(0) @map("quality_score")
+  createdById     String?  @map("created_by") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@unique([municipalityId, version])
+  @@index([municipalityId])
+  @@index([isActive])
+  @@map("municipality_baselines")
+}
+
+// ─── IMPORT ──────────────────────────────────────────────────
+
+model ImportRecord {
+  id               String       @id @default(uuid()) @db.Uuid
+  source           ImportSource
+  filename         String
+  batchCode        String?      @map("batch_code")
+  sourceFiles      Json?        @map("source_files") @db.JsonB
+  isCertified      Boolean      @default(false) @map("is_certified")
+  departmentId     String       @map("department_id") @db.Uuid
+  municipalityId   String       @map("municipality_id") @db.Uuid
+  projectId        String?      @map("project_id") @db.Uuid
+  assetTypeId      String?      @map("asset_type_id") @db.Uuid
+  observations     String?
+  totalRecords     Int          @default(0) @map("total_records")
+  validRecords     Int          @default(0) @map("valid_records")
+  duplicateRecords Int          @default(0) @map("duplicate_records")
+  pendingReview    Int          @default(0) @map("pending_review")
+  parserAccuracy   Float?       @default(0) @map("parser_accuracy")
+  falseDuplicates  Int?         @default(0) @map("false_duplicates")
+  rejectedRelations Int?        @default(0) @map("rejected_relations")
+  importedById     String?      @map("imported_by") @db.Uuid
+  rawPreview       String?      @map("raw_preview")
+  createdAt        DateTime     @default(now()) @map("created_at")
+  logs             ImportLog[]
+
+  @@index([municipalityId])
+  @@map("imports")
+}
+
+model ImportLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  importId  String   @map("import_id") @db.Uuid
+  import    ImportRecord @relation(fields: [importId], references: [id], onDelete: Cascade)
+  stage     String
+  level     LogLevel @default(INFO)
+  message   String
+  details   Json?    @db.JsonB
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([importId])
+  @@map("import_logs")
+}
+
+// ─── VALIDATION ──────────────────────────────────────────────
+
+model ValidationQueue {
+  id                  String           @id @default(uuid()) @db.Uuid
+  rawData             Json             @map("raw_data") @db.JsonB
+  suggestedName       String?          @map("suggested_name")
+  suggestedLatitude   Float?           @map("suggested_latitude")
+  suggestedLongitude  Float?           @map("suggested_longitude")
+  reason              String
+  status              ValidationStatus @default(PENDIENTE)
+  reviewedById         String?          @map("reviewed_by") @db.Uuid
+  reviewedAt          DateTime?        @map("reviewed_at")
+  notes               String?
+  createdAt           DateTime         @default(now()) @map("created_at")
+  updatedAt           DateTime         @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@map("validation_queue")
+}
+
+// ─── LAYERS (Dynamic) ────────────────────────────────────────
+
+model Layer {
+  id          String       @id @default(uuid()) @db.Uuid
+  code        String       @unique
+  name        String
+  description String?
+  icon        String?
+  isActive    Boolean      @default(true) @map("is_active")
+  sortOrder   Int          @default(0) @map("sort_order")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  assets      LayerAsset[]
+
+  @@map("layers")
+}
+
+model LayerAsset {
+  layerId String @map("layer_id") @db.Uuid
+  layer   Layer  @relation(fields: [layerId], references: [id], onDelete: Cascade)
+  assetId String @map("asset_id") @db.Uuid
+  asset   Asset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@id([layerId, assetId])
+  @@map("layer_assets")
+}
+
+// ─── CERTIFICATION & PILOT ──────────────────────────────────
+
+model VerificationRecord {
+  id              String     @id @default(uuid()) @db.Uuid
+  assetId         String     @map("asset_id") @db.Uuid
+  asset           Asset      @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  action          VerificationAction
+  previousStatus  CertificationStatus? @map("previous_status")
+  newStatus       CertificationStatus @map("new_status")
+  gpsLatitude     Float?     @map("gps_latitude")
+  gpsLongitude    Float?     @map("gps_longitude")
+  userId          String?    @map("user_id") @db.Uuid
+  observations    String?
+  photoCount      Int        @default(0) @map("photo_count")
+  createdAt       DateTime   @default(now()) @map("created_at")
+
+  @@index([assetId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("verification_records")
+}
+
+model MunicipalityPilot {
+  id              String          @id @default(uuid()) @db.Uuid
+  municipalityId  String          @unique @map("municipality_id") @db.Uuid
+  municipality    Municipality    @relation(fields: [municipalityId], references: [id], onDelete: Cascade)
+  pilotStatus     PilotStatus     @default(EN_PREPARACION) @map("pilot_status")
+  totalAssets     Int             @default(0) @map("total_assets")
+  validatedAssets Int             @default(0) @map("validated_assets")
+  certifiedAssets Int             @default(0) @map("certified_assets")
+  qualityScore    Float           @default(0) @map("quality_score")
+  startedAt       DateTime?       @map("started_at")
+  publishedAt     DateTime?       @map("published_at")
+  observations    String?
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  @@map("municipality_pilots")
+}
+
+// ─── ENUMS (Pilot) ──────────────────────────────────────────
+
+enum CertificationStatus {
+  PENDIENTE
+  VALIDADO
+  CERTIFICADO
+  HISTORICO
+
+  @@map("certification_status")
+}
+
+enum VerificationAction {
+  CONFIRMADO
+  CORREGIDO
+  NUEVO
+  RETIRADO
+  REQUIERE_REVISION
+
+  @@map("verification_action")
+}
+
+enum PilotStatus {
+  EN_PREPARACION
+  EN_VALIDACION
+  EN_CERTIFICACION
+  PUBLICADO
+  HISTORICO
+
+  @@map("pilot_status")
+}
+
+// ─── AUDIT ───────────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String?  @map("entity_id") @db.Uuid
+  userId     String?  @map("user_id") @db.Uuid
+  details    Json     @default("{}") @db.JsonB
+  ipAddress  String?  @map("ip_address")
+  userAgent  String?  @map("user_agent")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ─── USERS ───────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String
+  role         UserRole @default(VISUALIZADOR)
+  avatarUrl    String?  @map("avatar_url")
+  isActive     Boolean  @default(true) @map("is_active")
+  lastLoginAt  DateTime? @map("last_login_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+// ─── OFFLINE SYNC ────────────────────────────────────────────
+
+model SyncQueue {
+  id         String   @id @default(uuid()) @db.Uuid
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id") @db.Uuid
+  action     String
+  payload    Json     @db.JsonB
+  status     String   @default("PENDING")
+  deviceId   String?  @map("device_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  syncedAt   DateTime? @map("synced_at")
+
+  @@index([status])
+  @@index([deviceId])
+  @@map("sync_queue")
+}
+
+// ─── ENUMS ───────────────────────────────────────────────────
+
+enum AssetStatus {
+  ACTIVO
+  EN_CONSTRUCCION
+  EN_MANTENIMIENTO
+  FUERA_DE_SERVICIO
+  PENDIENTE_INSTALACION
+  RETIRADO
+
+  @@map("asset_status")
+}
+
+enum UserRole {
+  ADMIN
+  SUPERVISOR
+  VISUALIZADOR
+
+  @@map("user_role")
+}
+
+enum ImportSource {
+  WHATSAPP
+  EXCEL
+  CSV
+  KML
+  GPX
+  JSON
+
+  @@map("import_source")
+}
+
+enum ValidationStatus {
+  PENDIENTE
+  APROBADO
+  CORREGIDO
+  FUSIONADO
+  RECHAZADO
+
+  @@map("validation_status")
+}
+
+enum LogLevel {
+  INFO
+  WARN
+  ERROR
+
+  @@map("log_level")
+}

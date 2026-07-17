@@ -1,0 +1,35 @@
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build shared package
+        run: |
+          cd packages/shared
+          npm ci
+          npm run build
+
+      - name: Build frontend
+        run: |
+          cd apps/frontend
+          npm ci
+          npm run build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          workingDirectory: apps/frontend
+          command: pages deploy out --project-name=interplay-maps

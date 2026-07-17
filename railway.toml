@@ -1,0 +1,15 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "apps/backend/Dockerfile"
+
+[deploy]
+startCommand = "node apps/backend/dist/main"
+healthcheckPath = "/api/v1/dashboard"
+healthcheckTimeout = 30
+
+[service]
+name = "interplay-maps-backend"
+
+[[volume]]
+name = "pgdata"
+mountPath = "/var/lib/postgresql/data"

@@ -1,0 +1,6 @@
+name = "interplay-maps"
+compatibility_date = "2026-07-16"
+pages_build_output_dir = "out"
+
+[env.production]
+vars = { NEXT_PUBLIC_API_URL = "https://api.interplay-maps.com/api/v1" }

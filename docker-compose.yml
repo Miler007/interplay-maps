@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: interplay_maps
+      POSTGRES_USER: interplay
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U interplay -d interplay_maps"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://interplay:${DB_PASSWORD:-changeme}@db:5432/interplay_maps?schema=public
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      PORT: 4000
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://interplay-maps.pages.dev}
+    ports:
+      - "4000:4000"
+
+volumes:
+  pgdata:
