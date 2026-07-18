@@ -110,7 +110,7 @@ export default function MapPage() {
     : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
   const map = (
-    <MapContainer ref={mapRef} center={[5.15, -75.04]} zoom={15} maxZoom={19} className="h-full w-full" zoomControl={false}>
+      <MapContainer ref={mapRef} center={[5.15, -75.04]} zoom={15} maxZoom={18} className="h-full w-full" zoomControl={false}>
       <ZoomControl position="topright" />
       <TileLayer url={tileUrl} attribution={mapType === 'street' ? '&copy; OSM' : '&copy; Esri'} />
       {mapType === 'hybrid' && <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}" attribution="&copy; Esri" opacity={0.6} />}
