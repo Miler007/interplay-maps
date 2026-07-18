@@ -177,7 +177,7 @@ export default function FieldValidationPage() {
                   <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
                   <span className="font-medium text-xs">{c.code}</span>
                   <span className="text-slate-500 truncate text-xs flex-1">{c.name}</span>
-                  <button onClick={async () => { if (!confirm(`¿Retirar a ${c.name} de la caja ${asset.code}?`)) return; try { await api.assets.delete(c.id); location.reload(); } catch { alert('Error'); } }} className="text-xs text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity">✕ Retirar</button>
+                  <button onClick={async () => { if (!confirm(`¿Retirar a "${c.name}"?\nQuedará disponible 1 puerto en caja ${asset.code}.`)) return; try { await api.assets.delete(c.id); setFreePorts(prev => Math.min(prev + 1, totalPorts)); setClients(prev => prev.filter(x => x.id !== c.id)); } catch { alert('Error al retirar'); } }} className="text-xs text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity font-semibold">✕ Retirar</button>
                 </div>
               ))}
             </div>
