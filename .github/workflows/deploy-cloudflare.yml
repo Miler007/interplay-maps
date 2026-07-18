@@ -35,3 +35,6 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           workingDirectory: apps/frontend
           command: pages deploy out --project-name=interplay-maps
+
+      - name: Deploy Backend to Render
+        run: curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
