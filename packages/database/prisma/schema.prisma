@@ -684,6 +684,45 @@ model SyncQueue {
   @@map("sync_queue")
 }
 
+// ─── FIELD FEEDBACK ──────────────────────────────────────────
+
+model FieldFeedback {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String?  @map("user_id") @db.Uuid
+  municipalityId String  @map("municipality_id") @db.Uuid
+  assetId       String?  @map("asset_id") @db.Uuid
+  category      String
+  priority      FeedbackPriority @default(MEDIA)
+  description   String
+  status        FeedbackStatus @default(ABIERTO)
+  resolution    String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@index([municipalityId])
+  @@index([status])
+  @@index([category])
+  @@map("field_feedback")
+}
+
+enum FeedbackPriority {
+  BAJA
+  MEDIA
+  ALTA
+  CRITICA
+
+  @@map("feedback_priority")
+}
+
+enum FeedbackStatus {
+  ABIERTO
+  EN_PROCESO
+  RESUELTO
+  DESCARTADO
+
+  @@map("feedback_status")
+}
+
 // ─── ENUMS ───────────────────────────────────────────────────
 
 enum AssetStatus {

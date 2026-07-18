@@ -30,6 +30,7 @@ import { SearchModule } from './search/search.module';
 import { BaselineModule } from './baseline/baseline.module';
 import { IntegrityModule } from './integrity/integrity.module';
 import { ProvenanceModule } from './provenance/provenance.module';
+import { FeedbackModule } from './feedback/feedback.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { ProvenanceModule } from './provenance/provenance.module';
     BaselineModule,
     IntegrityModule,
     ProvenanceModule,
+    FeedbackModule,
   ],
 })
 export class AppModule {}
