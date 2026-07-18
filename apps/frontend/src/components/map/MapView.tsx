@@ -66,7 +66,7 @@ export default function MapView() {
   const [geoJSON, setGeoJSON] = useState<any>(null);
   const [layers, setLayers] = useState<any[]>([]);
   const [activeLayers, setActiveLayers] = useState<Set<string>>(new Set());
-  const [mapType, setMapType] = useState<'street' | 'satellite'>('street');
+  const [mapType, setMapType] = useState<'street' | 'satellite' | 'topo'>('satellite');
   const [isClient, setIsClient] = useState(false);
 
   const loadLayers = useCallback(async () => {
@@ -112,8 +112,10 @@ export default function MapView() {
         <TileLayer
           url={mapType === 'satellite'
             ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
-            : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'}
-          attribution='&copy; OSM'
+            : mapType === 'topo'
+            ? 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'
+            : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'}
+          attribution={mapType === 'satellite' ? '&copy; Esri' : mapType === 'topo' ? '&copy; OpenTopoMap' : '&copy; CARTO'}
         />
         {geoJSON && (
           <GeoJSON
@@ -127,13 +129,17 @@ export default function MapView() {
 
       <div className="absolute top-4 left-4 z-[1000] flex flex-col gap-2">
         <div className="bg-white rounded-lg shadow-lg p-2 flex gap-1">
-          <button onClick={() => setMapType('street')}
-            className={`px-3 py-1.5 text-xs rounded-md ${mapType === 'street' ? 'bg-interplay-500 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
-            Calle
-          </button>
           <button onClick={() => setMapType('satellite')}
-            className={`px-3 py-1.5 text-xs rounded-md ${mapType === 'satellite' ? 'bg-interplay-500 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
-            Satélite
+            className={`px-2.5 py-1.5 text-xs rounded-md ${mapType === 'satellite' ? 'bg-interplay-500 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
+            🛰 Satélite
+          </button>
+          <button onClick={() => setMapType('street')}
+            className={`px-2.5 py-1.5 text-xs rounded-md ${mapType === 'street' ? 'bg-interplay-500 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
+            🗺 Calle
+          </button>
+          <button onClick={() => setMapType('topo')}
+            className={`px-2.5 py-1.5 text-xs rounded-md ${mapType === 'topo' ? 'bg-interplay-500 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
+            🏔 Topo
           </button>
         </div>
 
