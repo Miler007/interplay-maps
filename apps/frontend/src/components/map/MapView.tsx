@@ -71,6 +71,7 @@ export default function MapView() {
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [locating, setLocating] = useState(false);
+  const [showControls, setShowControls] = useState(true);
   const mapRef = useRef<any>(null);
 
   const loadLayers = useCallback(async () => {
@@ -141,26 +142,27 @@ export default function MapView() {
         )}
       </MapContainer>
 
-      <div className="absolute top-2 lg:top-4 left-2 lg:left-4 right-2 lg:right-4 z-10 flex flex-col gap-1.5 lg:gap-2">
+      <button onClick={() => setShowControls(!showControls)} className="absolute top-2 left-2 z-10 bg-white/90 backdrop-blur rounded-lg shadow-lg px-2.5 py-1.5 text-xs text-slate-600 hover:bg-white">
+        {showControls ? '✕ Cerrar' : '☰ Panel'}
+      </button>
 
-        <div className="flex gap-1.5 lg:gap-2 overflow-x-auto pb-1">
-          <div className="bg-white/95 backdrop-blur rounded-lg shadow-lg p-1.5 lg:p-2 flex gap-1 flex-1 lg:flex-none">
-            <button onClick={() => setMapType('satellite')} className={`px-2 lg:px-3 py-1.5 text-xs rounded-md whitespace-nowrap ${mapType === 'satellite' ? 'bg-interplay-500 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}>🛰 Sat</button>
-            <button onClick={() => setMapType('hybrid')} className={`px-2 lg:px-3 py-1.5 text-xs rounded-md whitespace-nowrap ${mapType === 'hybrid' ? 'bg-interplay-500 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}>🛰 Hib</button>
-            <button onClick={() => setMapType('street')} className={`px-2 lg:px-3 py-1.5 text-xs rounded-md whitespace-nowrap ${mapType === 'street' ? 'bg-interplay-500 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}>🗺 Calle</button>
-            <button onClick={() => setMapType('topo')} className={`px-2 lg:px-3 py-1.5 text-xs rounded-md whitespace-nowrap ${mapType === 'topo' ? 'bg-interplay-500 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}>🏔 Topo</button>
+      {showControls && <div className="absolute top-10 lg:top-12 left-2 lg:left-4 right-2 lg:right-4 z-10 flex flex-col gap-1.5 lg:gap-2 max-h-[calc(100dvh-12rem)] overflow-y-auto">
+
+        <div className="bg-white/95 backdrop-blur rounded-lg shadow-lg p-1.5 lg:p-2">
+          <div className="flex gap-1 flex-wrap">
+            <button onClick={() => setMapType('satellite')} className={`px-2 lg:px-3 py-1.5 text-xs rounded-md ${mapType === 'satellite' ? 'bg-interplay-500 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}>🛰 Sat</button>
+            <button onClick={() => setMapType('hybrid')} className={`px-2 lg:px-3 py-1.5 text-xs rounded-md ${mapType === 'hybrid' ? 'bg-interplay-500 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}>🛰 Hib</button>
+            <button onClick={() => setMapType('street')} className={`px-2 lg:px-3 py-1.5 text-xs rounded-md ${mapType === 'street' ? 'bg-interplay-500 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}>🗺 Calle</button>
+            <button onClick={() => setMapType('topo')} className={`px-2 lg:px-3 py-1.5 text-xs rounded-md ${mapType === 'topo' ? 'bg-interplay-500 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}>🏔 Topo</button>
+            <button onClick={locateMe} disabled={locating} className="px-2 lg:px-3 py-1.5 text-xs rounded-md text-slate-600 hover:bg-slate-100">{locating ? '📍...' : '📍 GPS'}</button>
           </div>
-
-          <button onClick={locateMe} disabled={locating} className="bg-white/95 backdrop-blur rounded-lg shadow-lg px-3 py-1.5 text-xs text-slate-600 hover:bg-white whitespace-nowrap">
-            {locating ? '📍...' : '📍 GPS'}
-          </button>
         </div>
 
         <div className="bg-white/95 backdrop-blur rounded-lg shadow-lg p-2 flex gap-2">
-          <input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && searchCaja()} placeholder="Buscar caja (ej: 2.1, 15.7)" className="flex-1 text-xs bg-transparent outline-none text-slate-700 placeholder-slate-400" />
-          <button onClick={searchCaja} className="text-xs font-semibold text-interplay-600 hover:text-interplay-700 whitespace-nowrap">🔍 Buscar</button>
+          <input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && searchCaja()} placeholder="Buscar (ej: 2.1)" className="flex-1 text-xs bg-transparent outline-none text-slate-700 placeholder-slate-400" />
+          <button onClick={searchCaja} className="text-xs font-semibold text-interplay-600">🔍</button>
         </div>
-        {searchResults.length > 0 && <div className="bg-white/95 backdrop-blur rounded-lg shadow-lg p-2 max-h-40 overflow-y-auto">
+        {searchResults.length > 0 && <div className="bg-white/95 backdrop-blur rounded-lg shadow-lg p-2 max-h-32 overflow-y-auto">
           {searchResults.map((r: any) => (
             <button key={r.id} onClick={() => { mapRef.current?.flyTo([r.latitude, r.longitude], 18); setSearchResults([]); }}
               className="flex items-center gap-2 w-full text-left px-2 py-1.5 hover:bg-slate-100 rounded text-xs text-slate-700">
@@ -170,25 +172,27 @@ export default function MapView() {
           ))}
         </div>}
 
-        <div className="bg-white/95 backdrop-blur rounded-lg shadow-lg p-2 lg:p-3 min-w-[180px]">
-          <p className="text-[11px] font-semibold text-slate-500 uppercase mb-1.5">Capas</p>
-          {layers.map((layer: any) => (
-            <label key={layer.id} className="flex items-center gap-2 py-1 cursor-pointer">
-              <input type="checkbox" checked={activeLayers.has(layer.id)} onChange={() => toggleLayer(layer.id)} className="rounded border-slate-300 text-interplay-600 focus:ring-interplay-500 w-3.5 h-3.5" />
-              <span className="text-xs text-slate-700 truncate">{layer.name}</span>
-            </label>
-          ))}
-          <div className="mt-2 pt-2 border-t border-slate-100">
-            <p className="text-[11px] font-semibold text-slate-500 uppercase mb-1.5">Leyenda</p>
-            {Object.entries(iconColors).filter(([k]) => k === 'CAJA' || k === 'CLIENTE' || k === 'NODO' || k === 'POSTE' || k === 'CTO').map(([k, v]) => (
+        <div className="bg-white/95 backdrop-blur rounded-lg shadow-lg p-2 lg:p-3">
+          <details open>
+            <summary className="text-[11px] font-semibold text-slate-500 uppercase cursor-pointer">Capas</summary>
+            {layers.map((layer: any) => (
+              <label key={layer.id} className="flex items-center gap-2 py-1 cursor-pointer">
+                <input type="checkbox" checked={activeLayers.has(layer.id)} onChange={() => toggleLayer(layer.id)} className="rounded border-slate-300 text-interplay-600 w-3.5 h-3.5" />
+                <span className="text-xs text-slate-700 truncate">{layer.name}</span>
+              </label>
+            ))}
+          </details>
+          <details className="mt-2 pt-2 border-t border-slate-100">
+            <summary className="text-[11px] font-semibold text-slate-500 uppercase cursor-pointer">Leyenda</summary>
+            {[['CAJA', 'Caja FTTH'], ['CLIENTE', 'Cliente'], ['NODO', 'Nodo'], ['POSTE', 'Poste'], ['CTO', 'CTO']].map(([k, v]) => (
               <div key={k} className="flex items-center gap-2 py-0.5">
-                <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: v }} />
-                <span className="text-xs text-slate-500">{k === 'CAJA' ? 'Caja FTTH' : k === 'CLIENTE' ? 'Cliente' : k === 'NODO' ? 'Nodo' : k === 'POSTE' ? 'Poste' : k}</span>
+                <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: iconColors[k] || '#64748b' }} />
+                <span className="text-xs text-slate-500">{v}</span>
               </div>
             ))}
-          </div>
+          </details>
         </div>
-      </div>
+      </div>}
 
       <div className="absolute bottom-3 left-3 z-10 bg-white/90 backdrop-blur rounded-lg shadow-lg px-3 py-1.5 text-[11px] text-slate-500 flex items-center gap-3">
         <span>{geoJSON?.features?.length || 0} activos</span>
