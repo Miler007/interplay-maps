@@ -12,91 +12,82 @@ export default function IntegrityPage() {
     api.integrity.checkAll().then(setData).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <DashboardLayout><p className="text-slate-400 text-sm">Ejecutando diagnóstico...</p></DashboardLayout>;
+  if (loading) return <DashboardLayout><div className="flex items-center justify-center h-64"><div className="animate-spin w-6 h-6 border-2 border-interplay-500 border-t-transparent rounded-full" /></div></DashboardLayout>;
 
-  const t = data?.totales;
-  const c = data?.coordenadas;
-  const cap = data?.capacidad;
-  const top = data?.topologia;
-  const diag = data?.diagnosticos;
+  const t = data?.totales || {};
+  const c = data?.coordenadas || {};
+  const cap = data?.capacidad || {};
+  const top = data?.topologia || {};
+
+  const cards = [
+    { label: 'Activos', value: String(t.activos || 0), sub: `${t.cajas} cajas · ${t.clientes} clientes`, color: 'text-slate-800', bg: 'bg-slate-50' },
+    { label: 'Coordenadas inválidas', value: String(c?.coordenadasInvalidas?.length || 0), sub: `${c?.totalSinCoordenadas || 0} sin coordenadas`, color: 'text-red-600', bg: 'bg-red-50' },
+    { label: 'Capacidad crítica', value: String((cap?.porEstado?.SIN_CAPACIDAD || 0) + (cap?.porEstado?.ALTA_OCUPACION || 0)), sub: `${cap?.puertosTotales || 0} puertos · ${cap?.ocupacionPct || 0}% ocupación`, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { label: 'Cajas aisladas', value: String(top?.totalCajasAisladas || 0), sub: `${top?.relacionesRotas || 0} relaciones rotas`, color: 'text-blue-600', bg: 'bg-blue-50' },
+  ];
 
   return (
     <DashboardLayout>
-      <h1 className="text-2xl font-bold text-slate-900">Network Integrity</h1>
-      <p className="text-slate-500 mt-1">Diagnóstico permanente de la red FTTH</p>
+      <div className="max-w-6xl">
+        <h1 className="text-xl font-bold text-slate-900">Network Integrity</h1>
+        <p className="text-sm text-slate-400 mt-0.5">Diagnóstico permanente de la red</p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
-
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Totales</h2>
-          <div className="mt-3 space-y-2 text-sm">
-            <div className="flex justify-between"><span>Activos</span><strong>{t?.activos}</strong></div>
-            <div className="flex justify-between"><span>Cajas</span><strong>{t?.cajas}</strong></div>
-            <div className="flex justify-between"><span>Clientes</span><strong>{t?.clientes}</strong></div>
-            <div className="flex justify-between"><span>Relaciones</span><strong>{t?.relaciones}</strong></div>
-          </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
+          {cards.map(card => (
+            <div key={card.label} className="bg-white rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-slate-100 p-4">
+              <p className="text-xs text-slate-400 mb-1">{card.label}</p>
+              <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
+              <p className="text-xs text-slate-400 mt-0.5">{card.sub}</p>
+            </div>
+          ))}
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Coordenadas</h2>
-          <div className="mt-3 space-y-2 text-sm">
-            <div className="flex justify-between text-red-600"><span>⚠ Inválidas</span><strong>{c?.coordenadasInvalidas?.length || 0}</strong></div>
-            <div className="flex justify-between"><span>Sin coordenadas</span><strong>{c?.totalSinCoordenadas}</strong></div>
-            <div className="mt-2 text-xs text-slate-400">Clientes sin ubicación</div>
-            {c?.coordenadasInvalidas?.map((ci: any) => (
-              <div key={ci.code} className="text-xs bg-red-50 text-red-700 px-2 py-1 rounded">{ci.code}: ({ci.lat}, {ci.lng})</div>
-            ))}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
+          <div className="bg-white rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-slate-100 p-5">
+            <h2 className="text-sm font-semibold text-slate-700 mb-3">Coordenadas inválidas</h2>
+            {c?.coordenadasInvalidas?.length === 0 ? <p className="text-sm text-slate-400">Ninguna</p> : (
+              <div className="space-y-1.5">
+                {c?.coordenadasInvalidas?.map((ci: any) => (
+                  <div key={ci.code} className="flex items-center gap-2 text-sm px-3 py-2 bg-red-50 rounded-xl text-red-700">
+                    <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
+                    <span className="font-medium">{ci.code}</span>
+                    <span className="text-red-400 text-xs">({ci.lat}, {ci.lng})</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Capacidad</h2>
-          <div className="mt-3 space-y-2 text-sm">
-            <div className="flex justify-between"><span>Puertos totales</span><strong>{cap?.puertosTotales}</strong></div>
-            <div className="flex justify-between"><span>Usados</span><strong>{cap?.puertosUsados}</strong></div>
-            <div className="flex justify-between"><span>Libres</span><strong>{cap?.puertosLibres}</strong></div>
-            <div className="flex justify-between"><span>Ocupación</span><strong>{cap?.ocupacionPct}%</strong></div>
-            <div className="mt-2 space-y-1 text-xs">
-              {Object.entries(cap?.porEstado || {}).map(([k, v]: any) => (
-                <div key={k} className="flex justify-between">
-                  <span>{k}</span>
-                  <strong className={k === 'SIN_CAPACIDAD' ? 'text-red-600' : k === 'ALTA_OCUPACION' ? 'text-amber-600' : ''}>{v}</strong>
-                </div>
-              ))}
+          <div className="bg-white rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-slate-100 p-5">
+            <h2 className="text-sm font-semibold text-slate-700 mb-3">Capacidad por estado</h2>
+            <div className="space-y-2">
+              {Object.entries(cap?.porEstado || {}).map(([k, v]: any) => {
+                const colors: Record<string, string> = { DISPONIBLE: 'bg-emerald-500', ADVERTENCIA: 'bg-amber-500', ALTA_OCUPACION: 'bg-orange-500', SIN_CAPACIDAD: 'bg-red-500' };
+                return (
+                  <div key={k} className="flex items-center gap-3">
+                    <span className={`w-2.5 h-2.5 rounded-full ${colors[k] || 'bg-slate-400'} shrink-0`} />
+                    <span className="text-sm text-slate-600 flex-1">{k}</span>
+                    <span className="text-sm font-semibold text-slate-800">{v}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Topología</h2>
-          <div className="mt-3 space-y-2 text-sm">
-            <div className="flex justify-between text-red-600"><span>⚠ Cajas aisladas</span><strong>{top?.totalCajasAisladas}</strong></div>
-            <div className="flex justify-between"><span>Relaciones rotas</span><strong>{top?.relacionesRotas}</strong></div>
-            <div className="flex justify-between"><span>Códigos duplicados</span><strong>{top?.codigosDuplicados?.length || 0}</strong></div>
-            <details className="mt-2">
-              <summary className="text-xs text-interplay-600 cursor-pointer font-semibold">Ver cajas aisladas</summary>
-              <div className="mt-1 max-h-32 overflow-y-auto text-xs text-slate-500 space-y-0.5">
-                {top?.cajasAisladas?.map((c: string) => <div key={c}>{c}</div>)}
-              </div>
-            </details>
-          </div>
+        <div className="mt-4 bg-white rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-slate-100 p-5">
+          <h2 className="text-sm font-semibold text-slate-700 mb-3">Cajas aisladas</h2>
+          <details>
+            <summary className="text-sm text-interplay-600 font-medium cursor-pointer hover:text-interplay-700">
+              {top?.totalCajasAisladas || 0} cajas sin relaciones — mostrar lista
+            </summary>
+            <div className="mt-2 max-h-48 overflow-y-auto grid grid-cols-3 lg:grid-cols-6 gap-1">
+              {top?.cajasAisladas?.map((c: string) => (
+                <span key={c} className="text-xs text-slate-500 px-2 py-1 bg-slate-50 rounded">{c}</span>
+              ))}
+            </div>
+          </details>
         </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Diagnósticos</h2>
-          <div className="mt-3 space-y-2 text-sm">
-            <div className="flex justify-between"><span>Clientes sin caja</span><strong>{diag?.clientesSinCaja}</strong></div>
-            <div className="flex justify-between"><span>Ciclos topológicos</span><strong>{diag?.ciclos}</strong></div>
-            <div className="flex justify-between text-amber-600"><span>⚠ Fotos faltantes</span><strong>{diag?.fotosFaltantes}</strong></div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col items-center justify-center text-center">
-          <div className="text-4xl mb-2">🛡️</div>
-          <p className="text-sm font-semibold text-slate-700">Estado General</p>
-          <p className="text-xs text-slate-400 mt-1">Monitorización permanente activa</p>
-        </div>
-
       </div>
     </DashboardLayout>
   );
