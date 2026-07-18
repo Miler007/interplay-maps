@@ -29,8 +29,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+    <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl p-6 lg:p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-interplay-600">Interplay Maps</h1>
           <p className="text-slate-500 mt-2">Digital Twin FTTH — v1.0</p>

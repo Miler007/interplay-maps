@@ -102,11 +102,11 @@ export default function MapView() {
   };
 
   if (!isClient) {
-    return <div className="h-[calc(100vh-8rem)] bg-slate-100 rounded-xl flex items-center justify-center text-slate-400">Cargando mapa...</div>;
+    return <div className="h-[calc(100dvh-8rem)] lg:h-[calc(100vh-8rem)] bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 text-sm">Cargando mapa...</div>;
   }
 
   return (
-    <div className="relative h-[calc(100vh-8rem)] rounded-xl overflow-hidden">
+    <div className="relative h-[calc(100dvh-8rem)] lg:h-[calc(100vh-8rem)] rounded-xl overflow-hidden">
       <MapContainer center={[5.15, -75.04]} zoom={15} className="h-full w-full" zoomControl={false}>
         <ZoomControl position="topright" />
         <TileLayer
