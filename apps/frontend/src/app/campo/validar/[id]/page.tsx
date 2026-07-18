@@ -173,10 +173,11 @@ export default function FieldValidationPage() {
           {clients.length === 0 ? <p className="text-sm text-slate-400">Sin clientes</p> : (
             <div className="max-h-40 overflow-y-auto text-sm space-y-1">
               {clients.map((c: any) => (
-                <div key={c.id} className="flex items-center gap-2 py-1 px-2 hover:bg-slate-50 rounded">
+                <div key={c.id} className="flex items-center gap-2 py-1 px-2 hover:bg-slate-50 rounded group">
                   <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
-                  <span className="font-medium">{c.code}</span>
-                  <span className="text-slate-500 truncate">{c.name}</span>
+                  <span className="font-medium text-xs">{c.code}</span>
+                  <span className="text-slate-500 truncate text-xs flex-1">{c.name}</span>
+                  <button onClick={async () => { if (!confirm(`¿Retirar a ${c.name} de la caja ${asset.code}?`)) return; try { await api.assets.delete(c.id); location.reload(); } catch { alert('Error'); } }} className="text-xs text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity">✕ Retirar</button>
                 </div>
               ))}
             </div>
