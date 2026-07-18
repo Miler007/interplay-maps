@@ -17,6 +17,7 @@ const menuItems = [
   { href: '/validation', label: 'Validación', icon: '✓' },
   { href: '/reports', label: 'Reportes', icon: '📊' },
   { href: '/integrity', label: 'Integridad', icon: '🛡️' },
+  { href: '/certification', label: 'Certificación', icon: '✅' },
   { href: '/operation-zero/baselines', label: 'Baselines', icon: '◈' },
 ];
 
