@@ -24,15 +24,15 @@ export default function Sidebar() {
 
   return (
     <>
-      <button onClick={() => setOpen(!open)} className="fixed top-4 left-4 z-50 lg:hidden bg-slate-900 text-white p-2.5 rounded-lg shadow-lg">
+      <button onClick={() => setOpen(!open)} className="fixed top-4 left-4 z-[1001] lg:hidden bg-slate-900 text-white p-2.5 rounded-lg shadow-lg">
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           {open ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /> : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />}
         </svg>
       </button>
 
-      {open && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setOpen(false)} />}
+      {open && <div className="fixed inset-0 bg-black/50 z-[1002] lg:hidden" onClick={() => setOpen(false)} />}
 
-      <aside className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-slate-900 text-white h-screen overflow-y-auto transition-transform ${open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+      <aside className={`fixed lg:static inset-y-0 left-0 z-[1003] w-64 bg-slate-900 text-white h-screen overflow-y-auto transition-transform ${open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
         <div className="p-4 lg:p-6 border-b border-slate-700">
           <h1 className="text-lg lg:text-xl font-bold text-interplay-400">Interplay Maps</h1>
           <p className="text-xs text-slate-400 mt-1">v1.0 — GIS FTTH</p>

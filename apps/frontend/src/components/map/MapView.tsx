@@ -116,8 +116,8 @@ export default function MapView() {
             ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
             : mapType === 'topo'
             ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'
-            : 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}'}
-          attribution='&copy; Esri, TomTom, OpenStreetMap'
+            : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'}
+          attribution={mapType === 'street' ? '&copy; OpenStreetMap contributors' : '&copy; Esri'}
         />
         {mapType === 'hybrid' && <TileLayer
           url='https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'
@@ -134,7 +134,7 @@ export default function MapView() {
         )}
       </MapContainer>
 
-      <div className="absolute top-4 left-4 z-[1000] flex flex-col gap-2">
+      <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
         <div className="bg-white rounded-lg shadow-lg p-2 flex gap-1">
           <button onClick={() => setMapType('satellite')}
             className={`px-2.5 py-1.5 text-xs rounded-md ${mapType === 'satellite' ? 'bg-interplay-500 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
