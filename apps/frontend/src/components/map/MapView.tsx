@@ -142,7 +142,7 @@ export default function MapView() {
         )}
       </MapContainer>
 
-      <div className="absolute top-2 left-2 lg:left-auto lg:right-2 z-10 flex flex-col gap-1.5">
+      <div className="absolute top-2 right-2 z-10 flex flex-col gap-1.5">
         <div className="bg-white/95 backdrop-blur rounded-lg shadow-lg p-1.5 flex gap-1">
           {[['🛰 Sat', 'satellite'], ['🛰 Hib', 'hybrid'], ['🗺 Calle', 'street'], ['🏔 Topo', 'topo']].map(([label, key]) => (
             <button key={key} onClick={() => setMapType(key as any)}
