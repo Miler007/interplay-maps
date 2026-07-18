@@ -5,118 +5,52 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { api } from '@/lib/api';
 
 export default function MunicipalitiesPage() {
-  const [departments, setDepartments] = useState<any[]>([]);
+  const [depts, setDepts] = useState<any[]>([]);
   const [newDept, setNewDept] = useState('');
   const [newMun, setNewMun] = useState('');
-  const [selectedDept, setSelectedDept] = useState('');
+  const [selDept, setSelDept] = useState('');
+  const [token] = useState(() => typeof window !== 'undefined' ? localStorage.getItem('token') : '');
 
-  useEffect(() => {
-    loadDepartments();
-  }, []);
+  useEffect(() => { load(); }, []);
 
-  const loadDepartments = async () => {
-    const depts = await api.municipalities.getDepartments();
-    setDepartments(depts);
-  };
-
-  const handleCreateDept = async () => {
-    if (!newDept) return;
-    await api.municipalities.createDepartment(newDept);
-    setNewDept('');
-    loadDepartments();
-  };
-
-  const handleCreateMun = async () => {
-    if (!newMun || !selectedDept) return;
-    await api.municipalities.create({ name: newMun, departmentId: selectedDept });
-    setNewMun('');
-    loadDepartments();
+  const load = async () => {
+    try { const d = await api.municipalities.getDepartments(); setDepts(Array.isArray(d) ? d : []); } catch {}
   };
 
   return (
     <DashboardLayout>
-      <div className="max-w-4xl space-y-8">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Municipios</h1>
-          <p className="text-slate-500 mt-1">Gestión de departamentos y municipios</p>
-        </div>
+      <div className="max-w-4xl">
+        <h1 className="text-xl font-bold text-slate-900">Municipios</h1>
+        <p className="text-sm text-slate-400 mt-0.5">{depts.length} departamentos</p>
 
-        <div className="grid grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">Nuevo Departamento</h2>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={newDept}
-                onChange={(e) => setNewDept(e.target.value)}
-                placeholder="Nombre del departamento"
-                className="flex-1 px-3 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-interplay-500"
-              />
-              <button
-                onClick={handleCreateDept}
-                className="bg-interplay-600 hover:bg-interplay-700 text-white px-4 py-2 rounded-lg text-sm"
-              >
-                Crear
-              </button>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
+          <div className="bg-white rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-slate-100 p-5">
+            <h2 className="text-sm font-semibold text-slate-700 mb-4">Departamentos</h2>
+            <div className="flex gap-2 mb-4">
+              <input value={newDept} onChange={e => setNewDept(e.target.value)} placeholder="Nombre del departamento" className="flex-1 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-interplay-500" />
+              <button onClick={async () => { if (!newDept.trim()) return; try { await api.municipalities.createDepartment(newDept); setNewDept(''); load(); } catch { alert('Error'); } }} className="px-4 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all">Añadir</button>
+            </div>
+            <div className="space-y-1.5">
+              {depts.map((d: any) => (
+                <div key={d.id} className="flex items-center justify-between px-3.5 py-2.5 bg-slate-50 rounded-xl">
+                  <span className="text-sm font-medium text-slate-700">{d.name}</span>
+                  <span className="text-xs text-slate-400">{d.municipalities?.length || 0} municipios</span>
+                </div>
+              ))}
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">Nuevo Municipio</h2>
+          <div className="bg-white rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-slate-100 p-5">
+            <h2 className="text-sm font-semibold text-slate-700 mb-4">Nuevo Municipio</h2>
             <div className="space-y-3">
-              <select
-                value={selectedDept}
-                onChange={(e) => setSelectedDept(e.target.value)}
-                className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-interplay-500"
-              >
+              <select value={selDept} onChange={e => setSelDept(e.target.value)} className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none">
                 <option value="">Seleccionar departamento</option>
-                {departments.map((d: any) => (
-                  <option key={d.id} value={d.id}>{d.name}</option>
-                ))}
+                {depts.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newMun}
-                  onChange={(e) => setNewMun(e.target.value)}
-                  placeholder="Nombre del municipio"
-                  className="flex-1 px-3 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-interplay-500"
-                />
-                <button
-                  onClick={handleCreateMun}
-                  className="bg-interplay-600 hover:bg-interplay-700 text-white px-4 py-2 rounded-lg text-sm"
-                >
-                  Crear
-                </button>
-              </div>
+              <input value={newMun} onChange={e => setNewMun(e.target.value)} placeholder="Nombre del municipio" className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-interplay-500" />
+              <button onClick={async () => { if (!newMun.trim() || !selDept) return; try { await api.municipalities.create({ name: newMun, departmentId: selDept }); setNewMun(''); load(); } catch { alert('Error'); } }} className="w-full px-4 py-2.5 bg-interplay-500 hover:bg-interplay-600 text-white rounded-xl text-sm font-semibold transition-all shadow-[0_4px_14px_rgba(99,102,241,0.25)]">Crear Municipio</button>
             </div>
           </div>
-        </div>
-
-        <div className="space-y-4">
-          {departments.map((dept: any) => (
-            <div key={dept.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="px-6 py-4 bg-slate-50 border-b border-slate-200">
-                <h3 className="font-semibold text-slate-900">{dept.name}</h3>
-              </div>
-              {dept.municipalities?.length > 0 ? (
-                <div className="divide-y divide-slate-100">
-                  {dept.municipalities.map((mun: any) => (
-                    <div key={mun.id} className="px-6 py-3 flex items-center justify-between">
-                      <span className="text-sm text-slate-700">{mun.name}</span>
-                      <span className="text-xs text-slate-400">
-                        {(mun as any)._count?.assets || 0} activos
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="px-6 py-4 text-sm text-slate-400">
-                  Sin municipios registrados
-                </div>
-              )}
-            </div>
-          ))}
         </div>
       </div>
     </DashboardLayout>
