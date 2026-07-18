@@ -22,6 +22,10 @@ export default function FieldValidationPage() {
   const [fiberCount, setFiberCount] = useState('');
   const [obs, setObs] = useState('');
   const [error, setError] = useState('');
+  const [showAddClient, setShowAddClient] = useState(false);
+  const [newClientName, setNewClientName] = useState('');
+  const [newClientDoc, setNewClientDoc] = useState('');
+  const [newClientAddr, setNewClientAddr] = useState('');
 
   useEffect(() => {
     if (!id) return;
@@ -146,6 +150,25 @@ export default function FieldValidationPage() {
               ))}
             </div>
           )}
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm border p-5 space-y-3">
+          <p className="text-[11px] text-slate-400">Formato para importar varios clientes: <code className="bg-slate-100 px-1 rounded">box_code,customer_name,document_id,address</code>. Archivo ejemplo en <strong>D:\formato-clientes.csv</strong></p>
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold">👤 Añadir Cliente</h2>
+            <button onClick={() => setShowAddClient(!showAddClient)} className="text-xs text-interplay-600 font-semibold">{showAddClient ? '✕ Cerrar' : '+ Nuevo'}</button>
+          </div>
+          {showAddClient && <div className="space-y-2">
+            <input value={newClientName} onChange={e => setNewClientName(e.target.value)} placeholder="Nombre completo" className="w-full px-3 py-2 border rounded-lg text-sm" />
+            <div className="grid grid-cols-2 gap-2">
+              <input value={newClientDoc} onChange={e => setNewClientDoc(e.target.value)} placeholder="Cédula" className="w-full px-3 py-2 border rounded-lg text-sm" />
+              <input value={newClientAddr} onChange={e => setNewClientAddr(e.target.value)} placeholder="Dirección" className="w-full px-3 py-2 border rounded-lg text-sm" />
+            </div>
+            <button onClick={async () => {
+              if (!newClientName.trim()) return;
+              try { const user = JSON.parse(localStorage.getItem('user') || '{}'); await api.assets.create({ code: `CLI-${Date.now()}-${asset.code}`, name: newClientName, assetTypeId: 'd5ba7941-8e96-4521-b710-807be644059a', departmentId: asset.departmentId, municipalityId: asset.municipalityId, projectId: asset.projectId, observations: `Doc: ${newClientDoc}, Dir: ${newClientAddr}` }); setShowAddClient(false); setNewClientName(''); setNewClientDoc(''); setNewClientAddr(''); location.reload(); } catch (e: any) { alert('Error: ' + (e?.message || '')); }
+            }} className="px-4 py-2 bg-interplay-500 text-white rounded-lg text-sm hover:bg-interplay-600">Guardar Cliente</button>
+          </div>}
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border p-5">
