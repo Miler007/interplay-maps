@@ -30,9 +30,11 @@ export default function FieldValidationPage() {
       setTotalPorts(a.capacity?.totalPorts || 0);
       setFreePorts(a.capacity?.freePorts || 0);
       setObs(a.observations || '');
-      api.assets.getAll({ search: a.code, limit: '50' }).then((res: any) => {
+      const boxCode = a.code;
+      api.assets.getAll({ search: 'CLI-', limit: '200' }).then((res: any) => {
         const items = res.data || res || [];
-        setClients(Array.isArray(items) ? items.filter((c: any) => c.assetType?.code === 'CLIENTE') : []);
+        const list = Array.isArray(items) ? items : [];
+        setClients(list.filter((c: any) => c.assetType?.code === 'CLIENTE' && c.code.endsWith('-' + boxCode)));
       }).catch(() => {});
     }).catch(() => setError('Error al cargar')).finally(() => setLoading(false));
   }, [id]);
