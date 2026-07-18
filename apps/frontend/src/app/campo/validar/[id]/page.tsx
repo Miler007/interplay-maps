@@ -123,7 +123,7 @@ export default function FieldValidationPage() {
             <div>
               <label className="text-xs text-slate-500">Hilos</label>
               <select value={fiberCount} onChange={e => setFiberCount(e.target.value)} className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-white">
-                <option value="">—</option><option value="12">12</option><option value="24">24</option><option value="48">48</option><option value="96">96</option>
+                <option value="">—</option>                <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="8">8</option><option value="12">12</option><option value="24">24</option><option value="48">48</option><option value="96">96</option><option value="144">144</option>
               </select>
             </div>
           </div>
