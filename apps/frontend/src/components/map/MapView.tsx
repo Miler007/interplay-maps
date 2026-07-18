@@ -142,55 +142,57 @@ export default function MapView() {
         )}
       </MapContainer>
 
-      <button onClick={() => setShowControls(!showControls)} className="absolute top-2 left-2 z-10 bg-white/90 backdrop-blur rounded-lg shadow-lg px-2.5 py-1.5 text-xs text-slate-600 hover:bg-white">
-        {showControls ? '✕ Cerrar' : '☰ Panel'}
-      </button>
+      <div className="absolute top-2 right-2 z-10 flex flex-col gap-1.5 items-end">
+        <button onClick={locateMe} disabled={locating} className="bg-white/90 backdrop-blur rounded-lg shadow-lg px-2.5 py-1.5 text-xs text-slate-600 hover:bg-white">
+          {locating ? '📍...' : '📍'}
+        </button>
+        <button onClick={() => setShowControls(!showControls)} className="bg-white/90 backdrop-blur rounded-lg shadow-lg px-2.5 py-1.5 text-xs text-slate-600 hover:bg-white">
+          {showControls ? '✕' : '☰'}
+        </button>
+      </div>
 
-      {showControls && <div className="absolute top-10 lg:top-12 left-2 lg:left-4 right-2 lg:right-4 z-10 flex flex-col gap-1.5 lg:gap-2 max-h-[calc(100dvh-12rem)] overflow-y-auto">
-
-        <div className="bg-white/95 backdrop-blur rounded-lg shadow-lg p-1.5 lg:p-2">
+      {showControls && <div className="absolute top-12 right-2 z-10 w-56 lg:w-64 bg-white/95 backdrop-blur rounded-lg shadow-lg overflow-hidden text-xs max-h-[calc(100dvh-14rem)] overflow-y-auto">
+        <div className="p-2 border-b border-slate-100">
           <div className="flex gap-1 flex-wrap">
-            <button onClick={() => setMapType('satellite')} className={`px-2 lg:px-3 py-1.5 text-xs rounded-md ${mapType === 'satellite' ? 'bg-interplay-500 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}>🛰 Sat</button>
-            <button onClick={() => setMapType('hybrid')} className={`px-2 lg:px-3 py-1.5 text-xs rounded-md ${mapType === 'hybrid' ? 'bg-interplay-500 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}>🛰 Hib</button>
-            <button onClick={() => setMapType('street')} className={`px-2 lg:px-3 py-1.5 text-xs rounded-md ${mapType === 'street' ? 'bg-interplay-500 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}>🗺 Calle</button>
-            <button onClick={() => setMapType('topo')} className={`px-2 lg:px-3 py-1.5 text-xs rounded-md ${mapType === 'topo' ? 'bg-interplay-500 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}>🏔 Topo</button>
-            <button onClick={locateMe} disabled={locating} className="px-2 lg:px-3 py-1.5 text-xs rounded-md text-slate-600 hover:bg-slate-100">{locating ? '📍...' : '📍 GPS'}</button>
+            <button onClick={() => setMapType('satellite')} className={`px-2 py-1.5 text-xs rounded-md ${mapType === 'satellite' ? 'bg-interplay-500 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>🛰 Sat</button>
+            <button onClick={() => setMapType('hybrid')} className={`px-2 py-1.5 text-xs rounded-md ${mapType === 'hybrid' ? 'bg-interplay-500 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>🛰 Hib</button>
+            <button onClick={() => setMapType('street')} className={`px-2 py-1.5 text-xs rounded-md ${mapType === 'street' ? 'bg-interplay-500 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>🗺 Calle</button>
+            <button onClick={() => setMapType('topo')} className={`px-2 py-1.5 text-xs rounded-md ${mapType === 'topo' ? 'bg-interplay-500 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>🏔 Topo</button>
           </div>
         </div>
 
-        <div className="bg-white/95 backdrop-blur rounded-lg shadow-lg p-2 flex gap-2">
-          <input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && searchCaja()} placeholder="Buscar (ej: 2.1)" className="flex-1 text-xs bg-transparent outline-none text-slate-700 placeholder-slate-400" />
-          <button onClick={searchCaja} className="text-xs font-semibold text-interplay-600">🔍</button>
+        <div className="p-2 border-b border-slate-100">
+          <div className="flex gap-1">
+            <input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && searchCaja()} placeholder="Buscar caja..." className="flex-1 text-xs bg-slate-50 rounded px-2 py-1.5 outline-none text-slate-700 placeholder-slate-400" />
+            <button onClick={searchCaja} className="text-xs font-semibold text-interplay-600 px-2">🔍</button>
+          </div>
+          {searchResults.length > 0 && <div className="mt-1 max-h-28 overflow-y-auto">
+            {searchResults.map((r: any) => (
+              <button key={r.id} onClick={() => { mapRef.current?.flyTo([r.latitude, r.longitude], 18); setSearchResults([]); }}
+                className="flex items-center gap-1.5 w-full text-left px-2 py-1 hover:bg-slate-100 rounded text-xs text-slate-700">
+                <span style={{ background: iconColors[r.assetType?.code] || '#64748b' }} className="w-2 h-2 rounded-full inline-block shrink-0" />
+                <strong className="shrink-0">{r.code}</strong>
+                <span className="truncate text-slate-400">{r.name}</span>
+              </button>
+            ))}
+          </div>}
         </div>
-        {searchResults.length > 0 && <div className="bg-white/95 backdrop-blur rounded-lg shadow-lg p-2 max-h-32 overflow-y-auto">
-          {searchResults.map((r: any) => (
-            <button key={r.id} onClick={() => { mapRef.current?.flyTo([r.latitude, r.longitude], 18); setSearchResults([]); }}
-              className="flex items-center gap-2 w-full text-left px-2 py-1.5 hover:bg-slate-100 rounded text-xs text-slate-700">
-              <span style={{ background: iconColors[r.assetType?.code] || '#64748b' }} className="w-2 h-2 rounded-full inline-block" />
-              <strong>{r.code}</strong> <span className="text-slate-400">-</span> {r.name}
-            </button>
-          ))}
-        </div>}
 
-        <div className="bg-white/95 backdrop-blur rounded-lg shadow-lg p-2 lg:p-3">
-          <details open>
-            <summary className="text-[11px] font-semibold text-slate-500 uppercase cursor-pointer">Capas</summary>
-            {layers.map((layer: any) => (
-              <label key={layer.id} className="flex items-center gap-2 py-1 cursor-pointer">
-                <input type="checkbox" checked={activeLayers.has(layer.id)} onChange={() => toggleLayer(layer.id)} className="rounded border-slate-300 text-interplay-600 w-3.5 h-3.5" />
-                <span className="text-xs text-slate-700 truncate">{layer.name}</span>
-              </label>
-            ))}
-          </details>
-          <details className="mt-2 pt-2 border-t border-slate-100">
-            <summary className="text-[11px] font-semibold text-slate-500 uppercase cursor-pointer">Leyenda</summary>
-            {[['CAJA', 'Caja FTTH'], ['CLIENTE', 'Cliente'], ['NODO', 'Nodo'], ['POSTE', 'Poste'], ['CTO', 'CTO']].map(([k, v]) => (
-              <div key={k} className="flex items-center gap-2 py-0.5">
-                <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: iconColors[k] || '#64748b' }} />
-                <span className="text-xs text-slate-500">{v}</span>
-              </div>
-            ))}
-          </details>
+        <div className="p-2">
+          <p className="text-[11px] font-semibold text-slate-500 uppercase mb-1">Capas</p>
+          {layers.map((layer: any) => (
+            <label key={layer.id} className="flex items-center gap-1.5 py-0.5 cursor-pointer">
+              <input type="checkbox" checked={activeLayers.has(layer.id)} onChange={() => toggleLayer(layer.id)} className="rounded border-slate-300 text-interplay-600 w-3 h-3" />
+              <span className="text-xs text-slate-700 truncate">{layer.name}</span>
+            </label>
+          ))}
+          <p className="text-[11px] font-semibold text-slate-500 uppercase mt-2 mb-1 pt-2 border-t border-slate-100">Leyenda</p>
+          {[['CAJA', 'Caja FTTH', '#10b981'], ['CLIENTE', 'Cliente', '#6366f1'], ['NODO', 'Nodo', '#06b6d4'], ['POSTE', 'Poste', '#ef4444'], ['CTO', 'CTO', '#3b82f6']].map(([k, v, c]) => (
+            <div key={k} className="flex items-center gap-1.5 py-0.5">
+              <span className="w-2.5 h-2.5 rounded-full inline-block shrink-0" style={{ background: c }} />
+              <span className="text-xs text-slate-500">{v}</span>
+            </div>
+          ))}
         </div>
       </div>}
 
