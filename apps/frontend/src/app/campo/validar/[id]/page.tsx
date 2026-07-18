@@ -198,8 +198,9 @@ export default function FieldValidationPage() {
             </div>
             <button onClick={async () => {
               if (!newClientName.trim()) return;
-              try { const user = JSON.parse(localStorage.getItem('user') || '{}'); await api.assets.create({ code: `CLI-${Date.now()}-${asset.code}`, name: newClientName, assetTypeId: 'd5ba7941-8e96-4521-b710-807be644059a', departmentId: asset.departmentId, municipalityId: asset.municipalityId, projectId: asset.projectId, observations: `Doc: ${newClientDoc}, Dir: ${newClientAddr}` }); setShowAddClient(false); setNewClientName(''); setNewClientDoc(''); setNewClientAddr(''); location.reload(); } catch (e: any) { alert('Error: ' + (e?.message || '')); }
-            }} className="px-4 py-2 bg-interplay-500 text-white rounded-lg text-sm hover:bg-interplay-600">Guardar Cliente</button>
+              if (freePorts <= 0) { alert('No hay puertos libres en esta caja'); return; }
+              try { await api.assets.create({ code: `CLI-${Date.now()}-${asset.code}`, name: newClientName, assetTypeId: 'd5ba7941-8e96-4521-b710-807be644059a', departmentId: asset.departmentId, municipalityId: asset.municipalityId, projectId: asset.projectId, observations: `Doc: ${newClientDoc}, Dir: ${newClientAddr}` }); setFreePorts(prev => prev - 1); setShowAddClient(false); setNewClientName(''); setNewClientDoc(''); setNewClientAddr(''); location.reload(); } catch (e: any) { alert('Error: ' + (e?.message || '')); }
+            }} className="px-4 py-2 bg-interplay-500 text-white rounded-lg text-sm hover:bg-interplay-600">✅ Ocupar Puerto ({freePorts} libres)</button>
           </div>}
         </div>
 
