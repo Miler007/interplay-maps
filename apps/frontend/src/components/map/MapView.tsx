@@ -11,11 +11,14 @@ const ZoomControl = dynamic(() => import('react-leaflet').then((m) => m.ZoomCont
 
 const iconColors: Record<string, string> = {
   MUFLAS: '#f59e0b',
+  CAJA: '#10b981',
   CAJAS: '#10b981',
   CTO: '#3b82f6',
   SPLITTERS: '#8b5cf6',
   POSTES: '#ef4444',
+  NODO: '#06b6d4',
   NODOS: '#06b6d4',
+  CLIENTE: '#6366f1',
 };
 
 function featureToPopup(feature: any) {
