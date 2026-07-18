@@ -80,7 +80,10 @@ export default function CertificationPage() {
                     <td className="p-3 text-slate-500">{c.capacity?.totalPorts || '-'}/{c.capacity?.freePorts || '-'}</td>
                     <td className="p-3">
                       <div className="flex gap-1">
-                        {c.certStatus === 'PENDIENTE' && <button onClick={async () => { try { const user = JSON.parse(localStorage.getItem('user') || '{}'); const pos = await new Promise<any>((res) => { if (!navigator.geolocation) { res({}); } else { navigator.geolocation.getCurrentPosition((p) => res({ latitude: p.coords.latitude, longitude: p.coords.longitude }), () => res({}), { enableHighAccuracy: true, timeout: 10000 }); }}); await api.certification.validate(c.id, { userId: user.id, ...pos }); load(); } catch { alert('Error al validar'); } }} className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">📍 Validar</button>}
+                        {c.certStatus === 'PENDIENTE' && <div className="flex gap-1">
+                          <a href={`/campo/validar/${c.id}/`} className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">📍 Validar</a>
+                          <button onClick={async () => { try { const user = JSON.parse(localStorage.getItem('user') || '{}'); await api.certification.certify(c.id, { userId: user.id }); load(); } catch (e: any) { alert(e?.message || 'Error'); } }} className="text-xs bg-emerald-500 text-white px-2 py-1 rounded hover:bg-emerald-600">✅ Certificar</button>
+                        </div>}
                         {c.certStatus === 'VALIDADO' && <button onClick={async () => { try { const user = JSON.parse(localStorage.getItem('user') || '{}'); await api.certification.certify(c.id, { userId: user.id }); load(); } catch (e: any) { alert(e?.message || 'Error'); } }} className="text-xs bg-emerald-500 text-white px-2 py-1 rounded hover:bg-emerald-600">✅ Certificar</button>}
                         <a href={`/assets/${c.id}/`} className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded hover:bg-slate-200">Ver</a>
                       </div>
