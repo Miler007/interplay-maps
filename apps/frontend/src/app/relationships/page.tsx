@@ -4,155 +4,96 @@ import { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { api } from '@/lib/api';
 
-const RELATION_TYPES = ['ALIMENTADO_POR', 'ALIMENTA_A', 'CONECTADO_A', 'ENLACE_FIBRA', 'DEPENDE_DE'];
+const relIcons: Record<string, string> = {
+  ALIMENTADO_POR: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>',
+  ALIMENTA_A: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>',
+  CONECTADO_A: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  ENLACE_FIBRA: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>',
+  DEPENDE_DE: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="7 4 3 10 7 10 7 18 11 18 11 10 15 10 11 4 7 4"/></svg>',
+  DROP: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>',
+  FUSION: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>',
+  SPLITER_1X2: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 6 12 12 1 18"/><polyline points="23 6 12 12 23 18"/></svg>',
+  ALIMENTA: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>',
+};
+
+const SvgIcon = ({ html }: { html: string }) => <span dangerouslySetInnerHTML={{ __html: html }} />;
 
 export default function RelationshipsPage() {
-  const [relationships, setRelationships] = useState<any[]>([]);
-  const [analysis, setAnalysis] = useState<any>(null);
+  const [rels, setRels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [assetFilter, setAssetFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
-  const [form, setForm] = useState({ sourceAssetId: '', targetAssetId: '', relationType: RELATION_TYPES[0], description: '' });
-  const [submitting, setSubmitting] = useState(false);
 
-  const loadRelationships = async () => {
+  const load = async () => {
     setLoading(true);
     try {
-      const data = assetFilter
-        ? await api.relationships.getByAsset(assetFilter)
-        : await api.relationships.analyze().then((r: any) => r.edges || []).catch(() => []);
-      setRelationships(data);
-    } finally { setLoading(false); }
+      const d = await api.integrity.checkAll();
+      const assets = await api.assets.getAll({ type: 'CAJA', limit: '20' });
+      const items = assets?.data || assets || [];
+      const list = Array.isArray(items) ? items : [];
+      // Fetch relationships per asset
+      const all: any[] = [];
+      for (const a of list) {
+        try { const r = await api.relationships.getByAsset(a.id); if (Array.isArray(r)) all.push(...r); } catch {}
+      }
+      setRels(all);
+    } catch {}
+    setLoading(false);
   };
 
-  const loadAnalysis = async () => {
-    try {
-      const data = await api.relationships.analyze();
-      setAnalysis(data);
-    } catch { /* ignore */ }
-  };
+  useEffect(() => { load(); }, []);
 
-  useEffect(() => { loadRelationships(); loadAnalysis(); }, [assetFilter]);
-
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    try {
-      await api.relationships.create(form);
-      setForm({ sourceAssetId: '', targetAssetId: '', relationType: RELATION_TYPES[0], description: '' });
-      loadRelationships();
-      loadAnalysis();
-    } finally { setSubmitting(false); }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('¿Eliminar esta relación?')) return;
-    await api.relationships.delete(id);
-    loadRelationships();
-    loadAnalysis();
-  };
-
-  const filtered = relationships.filter((r) => (typeFilter ? r.relationType === typeFilter : true));
+  const filtered = typeFilter ? rels.filter(r => r.relationType === typeFilter) : rels;
+  const types: Record<string, number> = {};
+  rels.forEach(r => { types[r.relationType] = (types[r.relationType] || 0) + 1; });
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Relaciones</h1>
-          <p className="text-slate-500 mt-1">Conexiones entre activos de red</p>
+      <div className="max-w-5xl">
+        <h1 className="text-xl font-bold text-slate-900">Relaciones</h1>
+        <p className="text-sm text-slate-400 mt-0.5">{rels.length} relaciones topológicas</p>
+
+        <div className="flex gap-2 mt-6 overflow-x-auto pb-1 flex-wrap">
+          {Object.entries(types).map(([k, v]) => (
+            <button key={k} onClick={() => setTypeFilter(typeFilter === k ? '' : k)}
+              className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                typeFilter === k ? 'bg-slate-900 text-white shadow-sm' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
+              }`}>
+              <SvgIcon html={relIcons[k] || relIcons.CONECTADO_A} /> {k} ({v})
+            </button>
+          ))}
+          {typeFilter && <button onClick={() => setTypeFilter('')} className="px-3.5 py-2 rounded-xl text-xs font-semibold text-red-500 hover:bg-red-50 transition-all">✕ Limpiar</button>}
         </div>
 
-        {analysis && (
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-              <p className="text-sm text-slate-500">Nodos</p>
-              <p className="text-2xl font-bold text-slate-900">{analysis.nodeCount || 0}</p>
-            </div>
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-              <p className="text-sm text-slate-500">Aristas</p>
-              <p className="text-2xl font-bold text-slate-900">{analysis.edgeCount || 0}</p>
-            </div>
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-              <p className="text-sm text-slate-500">Densidad</p>
-              <p className="text-2xl font-bold text-slate-900">{analysis.density?.toFixed(4) || '—'}</p>
-            </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-16"><div className="animate-spin w-6 h-6 border-2 border-interplay-500 border-t-transparent rounded-full" /></div>
+        ) : (
+          <div className="space-y-1.5 mt-4">
+            {filtered.map((r: any) => (
+              <div key={r.id} className="bg-white rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-slate-100 p-4 hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-violet-50 rounded-xl flex items-center justify-center shrink-0">
+                    <SvgIcon html={relIcons[r.relationType] || relIcons.CONECTADO_A} />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap text-sm">
+                      <span className="font-semibold text-slate-800">{r.sourceAsset?.code || r.sourceAssetId?.slice(0, 8)}</span>
+                      <span className="px-2 py-0.5 bg-violet-50 text-violet-600 rounded-lg text-[11px] font-semibold">{r.relationType}</span>
+                      <span className="font-semibold text-slate-800">{r.targetAsset?.code || r.targetAssetId?.slice(0, 8)}</span>
+                    </div>
+                    {r.description && <p className="text-xs text-slate-400 mt-0.5">{r.description}</p>}
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button onClick={async () => { if (confirm('Eliminar relación?')) try { await api.relationships.delete(r.id); load(); } catch {} }}
+                      className="px-3 py-1.5 text-xs text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">✕</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {filtered.length === 0 && <p className="text-center text-slate-400 py-12 text-sm">Sin relaciones</p>}
           </div>
         )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center gap-3">
-              <input type="text" placeholder="Filtrar por ID de activo..." value={assetFilter} onChange={(e) => setAssetFilter(e.target.value)}
-                className="flex-1 bg-white border border-slate-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-interplay-500" />
-              <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}
-                className="bg-white border border-slate-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-interplay-500">
-                <option value="">Todos los tipos</option>
-                {RELATION_TYPES.map((t) => (<option key={t} value={t}>{t}</option>))}
-              </select>
-            </div>
-
-            {loading ? <p className="text-slate-500">Cargando relaciones...</p> : (
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50">
-                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">Origen</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">Destino</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">Tipo</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">Descripción</th>
-                      <th className="text-right px-4 py-3 text-xs font-medium text-slate-500 uppercase">Acción</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.length === 0 ? (
-                      <tr><td colSpan={5} className="px-4 py-8 text-center text-sm text-slate-400">No hay relaciones que mostrar</td></tr>
-                    ) : filtered.map((rel) => (
-                      <tr key={rel.id} className="border-b border-slate-100 hover:bg-slate-50">
-                        <td className="px-4 py-3 text-sm font-mono text-slate-500">{rel.sourceAsset?.code || rel.sourceAssetId}</td>
-                        <td className="px-4 py-3 text-sm font-mono text-slate-500">{rel.targetAsset?.code || rel.targetAssetId}</td>
-                        <td className="px-4 py-3"><span className="px-2 py-0.5 text-xs rounded-full bg-interplay-100 text-interplay-700 font-medium">{rel.relationType}</span></td>
-                        <td className="px-4 py-3 text-sm text-slate-600">{rel.description || '—'}</td>
-                        <td className="px-4 py-3 text-right"><button onClick={() => handleDelete(rel.id)} className="text-xs text-red-500 hover:text-red-700">Eliminar</button></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 h-fit">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">Nueva Relación</h2>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1">Activo origen (ID)</label>
-                <input type="text" required value={form.sourceAssetId} onChange={(e) => setForm({ ...form, sourceAssetId: e.target.value })}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-interplay-500" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1">Activo destino (ID)</label>
-                <input type="text" required value={form.targetAssetId} onChange={(e) => setForm({ ...form, targetAssetId: e.target.value })}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-interplay-500" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1">Tipo de relación</label>
-                <select value={form.relationType} onChange={(e) => setForm({ ...form, relationType: e.target.value })}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-interplay-500">
-                  {RELATION_TYPES.map((t) => (<option key={t} value={t}>{t}</option>))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1">Descripción</label>
-                <textarea rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-interplay-500 resize-none" />
-              </div>
-              <button type="submit" disabled={submitting}
-                className="w-full bg-interplay-600 hover:bg-interplay-700 text-white px-4 py-2 rounded-lg text-sm transition-colors disabled:opacity-50">
-                {submitting ? 'Creando...' : 'Crear Relación'}
-              </button>
-            </form>
-          </div>
-        </div>
       </div>
     </DashboardLayout>
   );
