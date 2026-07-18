@@ -89,9 +89,10 @@ export default function FieldValidationPage() {
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="text-xs text-slate-500">Totales</label>
-              <select value={totalPorts} onChange={e => setTotalPorts(Number(e.target.value))} className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-white">
-                <option value={0}>—</option><option value={8}>8</option><option value={16}>16</option><option value={24}>24</option><option value={48}>48</option>
+              <select value={totalPorts} onChange={e => { setTotalPorts(Number(e.target.value)); if (Number(e.target.value) < freePorts) setFreePorts(Number(e.target.value)); }} className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-white">
+                <option value={0}>—</option><option value={8}>8</option><option value={16}>16</option>
               </select>
+              <p className="text-[10px] text-slate-400 mt-0.5">Solo 8 o 16 puertos</p>
             </div>
             <div>
               <label className="text-xs text-slate-500">Libres</label>
@@ -112,7 +113,11 @@ export default function FieldValidationPage() {
               <label className="text-xs text-slate-500">Color</label>
               <select value={fiberColor} onChange={e => setFiberColor(e.target.value)} className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-white">
                 <option value="">—</option>
-                {['Naranja','Verde','Azul','Rojo','Blanco','Amarillo','Café','Gris'].map(c => <option key={c}>{c}</option>)}
+                {[
+                  {c:'Azul', n:'1'}, {c:'Naranja', n:'2'}, {c:'Verde', n:'3'}, {c:'Café', n:'4'},
+                  {c:'Pizarra', n:'5'}, {c:'Blanco', n:'6'}, {c:'Rojo', n:'7'}, {c:'Negro', n:'8'},
+                  {c:'Amarillo', n:'9'}, {c:'Violeta', n:'10'}, {c:'Rosado', n:'11'}, {c:'Celeste', n:'12'},
+                ].map(({c, n}) => <option key={c} value={c}>{c} (#{n})</option>)}
               </select>
             </div>
             <div>
@@ -126,6 +131,8 @@ export default function FieldValidationPage() {
 
         <div className="bg-white rounded-xl shadow-sm border p-5 space-y-3">
           <h2 className="font-semibold">👥 Clientes ({clients.length})</h2>
+          {totalPorts > 0 && clients.length > totalPorts && <div className="bg-red-50 text-red-600 text-xs px-3 py-2 rounded-lg font-semibold">⚠ {clients.length} clientes para {totalPorts} puertos — excede la capacidad</div>}
+          {totalPorts > 0 && clients.length <= totalPorts && <div className="bg-emerald-50 text-emerald-600 text-xs px-3 py-2 rounded-lg">{clients.length} de {totalPorts} puertos ocupados ({Math.round(clients.length/totalPorts*100)}%)</div>}
           {clients.length === 0 ? <p className="text-sm text-slate-400">Sin clientes</p> : (
             <div className="max-h-40 overflow-y-auto text-sm space-y-1">
               {clients.map((c: any) => (
