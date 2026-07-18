@@ -263,6 +263,13 @@ export const api = {
     suggestions: (q: string) => fetchApi<any[]>(`/search/suggestions?q=${encodeURIComponent(q)}`),
   },
 
+  integrity: {
+    checkAll: (municipalityId?: string) => {
+      const q = municipalityId ? `?municipalityId=${municipalityId}` : '';
+      return fetchApi<any>(`/integrity${q}`);
+    },
+  },
+
   reports: {
     generate: (data: any) => fetchApi<any>('/reports/generate', { method: 'POST', body: JSON.stringify(data) }),
     download: (id: string) => fetchApi<any>(`/reports/download/${id}`),
