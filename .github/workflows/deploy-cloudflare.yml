@@ -2,7 +2,7 @@ name: Deploy to Cloudflare Pages
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
 
 jobs:
@@ -22,6 +22,8 @@ jobs:
           npm run build
 
       - name: Build frontend
+        env:
+          NEXT_PUBLIC_API_URL: https://interplay-maps.onrender.com/api/v1
         run: |
           cd apps/frontend
           npm ci
