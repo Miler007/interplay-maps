@@ -7,6 +7,7 @@ import { useState } from 'react';
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: '◉' },
   { href: '/operation-zero', label: 'Op. Zero', icon: '🚀' },
+  { href: '/operation-zero/campo', label: 'Revisión Campo', icon: '📋' },
   { href: '/pilot', label: 'Piloto', icon: '✈' },
   { href: '/mapa', label: 'Mapa', icon: '🗺' },
   { href: '/assets', label: 'Activos', icon: '⊞' },
