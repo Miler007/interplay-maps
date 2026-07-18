@@ -24,10 +24,9 @@ export default function Sidebar() {
 
   return (
     <>
-      <button onClick={() => setOpen(!open)} className="fixed top-4 left-4 z-[1001] lg:hidden bg-slate-900 text-white p-2.5 rounded-lg shadow-lg">
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          {open ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /> : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />}
-        </svg>
+      <button onClick={() => setOpen(!open)} className="fixed top-4 left-4 z-[1001] bg-slate-900 text-white px-3 py-2 rounded-lg shadow-lg text-xs flex items-center gap-1.5 hover:bg-slate-800">
+        <span>{open ? '✕' : '☰'}</span>
+        <span className="hidden sm:inline">{open ? 'Cerrar' : 'Menú'}</span>
       </button>
 
       {open && <div className="fixed inset-0 bg-black/50 z-[1002] lg:hidden" onClick={() => setOpen(false)} />}
