@@ -29,6 +29,7 @@ import { QueryEngineModule } from './query-engine/query-engine.module';
 import { SearchModule } from './search/search.module';
 import { BaselineModule } from './baseline/baseline.module';
 import { IntegrityModule } from './integrity/integrity.module';
+import { ProvenanceModule } from './provenance/provenance.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { IntegrityModule } from './integrity/integrity.module';
     SearchModule,
     BaselineModule,
     IntegrityModule,
+    ProvenanceModule,
   ],
 })
 export class AppModule {}
