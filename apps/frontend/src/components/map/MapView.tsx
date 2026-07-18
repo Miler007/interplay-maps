@@ -107,7 +107,7 @@ export default function MapView() {
 
   return (
     <div className="relative h-[calc(100dvh-8rem)] lg:h-[calc(100vh-8rem)] rounded-xl overflow-hidden">
-      <MapContainer center={[5.15, -75.04]} zoom={15} className="h-full w-full" zoomControl={false}>
+      <MapContainer center={[5.15, -75.04]} zoom={16} maxZoom={19} className="h-full w-full" zoomControl={false}>
         <ZoomControl position="topright" />
         <TileLayer
           url={mapType === 'satellite'
