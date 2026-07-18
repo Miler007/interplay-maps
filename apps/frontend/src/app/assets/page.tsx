@@ -19,7 +19,8 @@ export default function AssetsPage() {
       const params: Record<string, string> = {};
       if (filter) params.type = filter;
       const result = await api.assets.getAll(params);
-      setAssets(result.data);
+      const items = result.data || result || [];
+      setAssets(Array.isArray(items) ? items : []);
     } finally {
       setLoading(false);
     }
