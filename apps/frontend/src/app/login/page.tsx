@@ -2,16 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-
-const MOCK_USERS = [
-  { email: 'admin@interplay.com', password: 'admin123', name: 'Admin Interplay', role: 'ADMIN' },
-  { email: 'tecnico@interplay.com', password: 'tecnico123', name: 'Técnico Campo', role: 'SUPERVISOR' },
-  { email: 'visor@interplay.com', password: 'visor123', name: 'Visualizador', role: 'VISUALIZADOR' },
-];
+import { api } from '@/lib/api';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('admin@interplay.com');
+  const [email, setEmail] = useState('admin@interplay-maps.com');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,14 +16,14 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
-    const user = MOCK_USERS.find(u => u.email === email && u.password === password);
-
-    if (user) {
-      localStorage.setItem('token', 'mock-token-' + Date.now());
-      localStorage.setItem('user', JSON.stringify({ email: user.email, name: user.name, role: user.role }));
+    try {
+      const res = await api.auth.login(email, password, 120000);
+      localStorage.setItem('token', res.accessToken);
+      localStorage.setItem('refreshToken', res.refreshToken);
+      localStorage.setItem('user', JSON.stringify(res.user));
       router.push('/dashboard');
-    } else {
-      setError('Credenciales inválidas. Prueba: admin@interplay.com / admin123');
+    } catch (err: any) {
+      setError(err?.message || 'Credenciales inválidas');
       setLoading(false);
     }
   };
@@ -48,7 +43,7 @@ export default function LoginPage() {
             <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)}
               className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-interplay-500 focus:border-transparent outline-none"
-              placeholder="admin@interplay.com" required />
+              placeholder="admin@interplay-maps.com" required />
           </div>
 
           <div>
@@ -65,10 +60,8 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-6 p-4 bg-slate-50 rounded-lg text-xs text-slate-500 space-y-1">
-          <p className="font-medium text-slate-700">Credenciales de prueba:</p>
-          <p>👑 Admin: <strong>admin@interplay.com</strong> / <strong>admin123</strong></p>
-          <p>🔧 Técnico: <strong>tecnico@interplay.com</strong> / <strong>tecnico123</strong></p>
-          <p>👁 Visor: <strong>visor@interplay.com</strong> / <strong>visor123</strong></p>
+          <p className="font-medium text-slate-700">Credenciales del sistema:</p>
+          <p>👑 Admin: <strong>admin@interplay-maps.com</strong> / <strong>Admin2026!</strong></p>
         </div>
       </div>
     </div>

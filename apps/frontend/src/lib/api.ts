@@ -36,9 +36,9 @@ async function fetchApi<T>(endpoint: string, options?: RequestInitWithTimeout): 
 
 export const api = {
   auth: {
-    login: (email: string, password: string) =>
+    login: (email: string, password: string, timeout?: number) =>
       fetchApi<{ accessToken: string; refreshToken: string; expiresIn: number; user: any }>('/auth/login', {
-        method: 'POST', body: JSON.stringify({ email, password }),
+        method: 'POST', body: JSON.stringify({ email, password }), timeout,
       }),
     refresh: (refreshToken: string) =>
       fetchApi<any>('/auth/refresh', { method: 'POST', body: JSON.stringify({ refreshToken }) }),
