@@ -66,7 +66,7 @@ export default function MapView() {
   const [geoJSON, setGeoJSON] = useState<any>(null);
   const [layers, setLayers] = useState<any[]>([]);
   const [activeLayers, setActiveLayers] = useState<Set<string>>(new Set());
-  const [mapType, setMapType] = useState<'street' | 'satellite' | 'topo'>('satellite');
+  const [mapType, setMapType] = useState<'satellite' | 'street' | 'topo' | 'hybrid'>('satellite');
   const [isClient, setIsClient] = useState(false);
 
   const loadLayers = useCallback(async () => {
@@ -112,11 +112,18 @@ export default function MapView() {
         <TileLayer
           url={mapType === 'satellite'
             ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+            : mapType === 'hybrid'
+            ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
             : mapType === 'topo'
-            ? 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'
-            : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'}
-          attribution={mapType === 'satellite' ? '&copy; Esri' : mapType === 'topo' ? '&copy; OpenTopoMap' : '&copy; CARTO'}
+            ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'
+            : 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}'}
+          attribution='&copy; Esri, TomTom, OpenStreetMap'
         />
+        {mapType === 'hybrid' && <TileLayer
+          url='https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'
+          attribution='&copy; Esri'
+          opacity={0.6}
+        />}
         {geoJSON && (
           <GeoJSON
             key={JSON.stringify(activeLayers)}
@@ -136,6 +143,10 @@ export default function MapView() {
           <button onClick={() => setMapType('street')}
             className={`px-2.5 py-1.5 text-xs rounded-md ${mapType === 'street' ? 'bg-interplay-500 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
             🗺 Calle
+          </button>
+          <button onClick={() => setMapType('hybrid')}
+            className={`px-2.5 py-1.5 text-xs rounded-md ${mapType === 'hybrid' ? 'bg-interplay-500 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
+            🛰 Híbrido
           </button>
           <button onClick={() => setMapType('topo')}
             className={`px-2.5 py-1.5 text-xs rounded-md ${mapType === 'topo' ? 'bg-interplay-500 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
