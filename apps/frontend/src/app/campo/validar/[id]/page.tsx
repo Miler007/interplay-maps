@@ -1,9 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { api } from '@/lib/api';
+
+const MapContainer = dynamic(() => import('react-leaflet').then((m) => m.MapContainer), { ssr: false });
+const TileLayer = dynamic(() => import('react-leaflet').then((m) => m.TileLayer), { ssr: false });
+const Marker = dynamic(() => import('react-leaflet').then((m) => m.Marker), { ssr: false });
+const Popup = dynamic(() => import('react-leaflet').then((m) => m.Popup), { ssr: false });
 
 export default function FieldValidationPage() {
   const params = useParams();
@@ -23,6 +29,9 @@ export default function FieldValidationPage() {
   const [obs, setObs] = useState('');
   const [error, setError] = useState('');
   const [showAddClient, setShowAddClient] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  const markerRef = useRef<any>(null);
+  useEffect(() => { setIsClient(true); }, []);
   const [newClientName, setNewClientName] = useState('');
   const [newClientDoc, setNewClientDoc] = useState('');
   const [newClientAddr, setNewClientAddr] = useState('');
@@ -85,9 +94,31 @@ export default function FieldValidationPage() {
           <h2 className="font-semibold">📍 Ubicación</h2>
           <div className="flex gap-2 items-center">
             <button onClick={captureGps} className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600">📡 GPS</button>
-            <span className="text-sm text-slate-500">{gpsStatus || (asset.latitude ? `${asset.latitude.toFixed(5)}, ${asset.longitude.toFixed(5)}` : 'Sin coordenadas')}</span>
+            <span className="text-sm text-slate-500">{gpsStatus || (asset.latitude ? `Actual: ${asset.latitude.toFixed(5)}, ${asset.longitude.toFixed(5)}` : 'Sin coordenadas')}</span>
           </div>
-          {gps && <p className="text-xs text-emerald-600">Nuevo: {gps.lat.toFixed(5)}, {gps.lng.toFixed(5)}</p>}
+          {gps && (
+            <div>
+              <p className="text-xs text-emerald-600 mb-2">Arrastra el marcador para ajustar la ubicación exacta</p>
+              <p className="text-xs text-slate-500 mb-1">Coords: {gps.lat.toFixed(5)}, {gps.lng.toFixed(5)}</p>
+              {isClient && <div className="h-48 lg:h-64 rounded-lg overflow-hidden border">
+                <MapContainer center={[gps.lat, gps.lng]} zoom={18} className="h-full w-full" zoomControl={false} scrollWheelZoom={true}>
+                  <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" attribution="&copy; Esri" />
+                  <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}" attribution="&copy; Esri" opacity={0.5} />
+                  <Marker position={[gps.lat, gps.lng]} draggable={true} ref={markerRef} eventHandlers={{ dragend: () => { const m = markerRef.current; if (m) { const pos = m.getLatLng(); setGps({ lat: pos.lat, lng: pos.lng }); } }}}>
+                    <Popup>📍 Arrástrame a la ubicación exacta</Popup>
+                  </Marker>
+                </MapContainer>
+              </div>}
+            </div>
+          )}
+          {!gps && asset.latitude && isClient && <div className="h-40 rounded-lg overflow-hidden border">
+            <MapContainer center={[asset.latitude, asset.longitude]} zoom={17} className="h-full w-full" zoomControl={false} scrollWheelZoom={false}>
+              <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" attribution="&copy; Esri" />
+              <Marker position={[asset.latitude, asset.longitude]}>
+                <Popup>Ubicación actual registrada</Popup>
+              </Marker>
+            </MapContainer>
+          </div>}
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border p-5 space-y-4">
