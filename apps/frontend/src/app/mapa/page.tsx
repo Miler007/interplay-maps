@@ -1,20 +1,17 @@
 'use client';
 
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import dynamic from 'next/dynamic';
+import Sidebar from '@/components/layout/Sidebar';
 
 const MapView = dynamic(() => import('@/components/map/MapView'), { ssr: false });
 
 export default function MapPage() {
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Mapa de Infraestructura</h1>
-          <p className="text-slate-500 mt-1">Visualización de activos FTTH</p>
-        </div>
+    <div className="flex">
+      <Sidebar />
+      <main className="flex-1 lg:ml-64">
         <MapView />
-      </div>
-    </DashboardLayout>
+      </main>
+    </div>
   );
 }

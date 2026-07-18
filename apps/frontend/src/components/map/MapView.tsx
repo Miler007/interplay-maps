@@ -122,11 +122,11 @@ export default function MapView() {
   };
 
   if (!isClient) {
-    return <div className="h-[calc(100dvh-8rem)] lg:h-[calc(100vh-8rem)] bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 text-sm">Cargando mapa...</div>;
+    return <div className="h-dvh w-full bg-slate-100 flex items-center justify-center text-slate-400 text-sm">Cargando mapa...</div>;
   }
 
   return (
-    <div className="relative h-[calc(100dvh-8rem)] lg:h-[calc(100vh-8rem)] rounded-xl overflow-hidden">
+    <div className="relative h-dvh w-full">
       <MapContainer ref={mapRef} center={[5.15, -75.04]} zoom={15} maxZoom={19} className="h-full w-full" zoomControl={false}>
         <ZoomControl position="topright" />
         <TileLayer
@@ -142,25 +142,28 @@ export default function MapView() {
         )}
       </MapContainer>
 
-      <div className="absolute top-2 right-2 z-10 flex flex-col gap-1.5 items-end">
-        <button onClick={locateMe} disabled={locating} className="bg-white/90 backdrop-blur rounded-lg shadow-lg px-2.5 py-1.5 text-xs text-slate-600 hover:bg-white">
-          {locating ? '📍...' : '📍'}
-        </button>
-        <button onClick={() => setShowControls(!showControls)} className="bg-white/90 backdrop-blur rounded-lg shadow-lg px-2.5 py-1.5 text-xs text-slate-600 hover:bg-white">
-          {showControls ? '✕' : '☰'}
-        </button>
-      </div>
-
-      {showControls && <div className="absolute top-12 right-2 z-10 w-56 lg:w-64 bg-white/95 backdrop-blur rounded-lg shadow-lg overflow-hidden text-xs max-h-[calc(100dvh-14rem)] overflow-y-auto">
-        <div className="p-2 border-b border-slate-100">
-          <div className="flex gap-1 flex-wrap">
-            <button onClick={() => setMapType('satellite')} className={`px-2 py-1.5 text-xs rounded-md ${mapType === 'satellite' ? 'bg-interplay-500 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>🛰 Sat</button>
-            <button onClick={() => setMapType('hybrid')} className={`px-2 py-1.5 text-xs rounded-md ${mapType === 'hybrid' ? 'bg-interplay-500 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>🛰 Hib</button>
-            <button onClick={() => setMapType('street')} className={`px-2 py-1.5 text-xs rounded-md ${mapType === 'street' ? 'bg-interplay-500 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>🗺 Calle</button>
-            <button onClick={() => setMapType('topo')} className={`px-2 py-1.5 text-xs rounded-md ${mapType === 'topo' ? 'bg-interplay-500 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>🏔 Topo</button>
-          </div>
+      <div className="absolute top-2 left-2 lg:left-auto lg:right-2 z-10 flex flex-col gap-1.5">
+        <div className="bg-white/95 backdrop-blur rounded-lg shadow-lg p-1.5 flex gap-1">
+          {[['🛰 Sat', 'satellite'], ['🛰 Hib', 'hybrid'], ['🗺 Calle', 'street'], ['🏔 Topo', 'topo']].map(([label, key]) => (
+            <button key={key} onClick={() => setMapType(key as any)}
+              className={`px-2 lg:px-3 py-1.5 text-xs rounded-md whitespace-nowrap ${mapType === key ? 'bg-interplay-500 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}>{label}</button>
+          ))}
+          <button onClick={locateMe} disabled={locating} className="px-2 lg:px-3 py-1.5 text-xs rounded-md text-slate-600 hover:bg-slate-100">{locating ? '📍...' : '📍 GPS'}</button>
         </div>
 
+        <div className="absolute bottom-3 left-3 z-10 flex gap-1.5">
+          <div className="bg-white/90 backdrop-blur rounded-lg shadow-lg px-3 py-1.5 text-[11px] text-slate-500 flex items-center gap-2">
+            <span>{geoJSON?.features?.length || 0} activos</span>
+            <span className="text-slate-300">|</span>
+            <button onClick={() => { mapRef.current?.flyTo([5.15, -75.04], 15); }} className="text-interplay-600 hover:text-interplay-700 font-semibold">📍 Fresno</button>
+          </div>
+          <button onClick={() => setShowControls(!showControls)} className="bg-white/90 backdrop-blur rounded-lg shadow-lg px-3 py-1.5 text-[11px] text-slate-600 hover:bg-white whitespace-nowrap">
+            {showControls ? '✕ Cerrar' : '☰ Panel'}
+          </button>
+        </div>
+      </div>
+
+      {showControls && <div className="absolute top-14 right-2 z-10 w-64 bg-white/95 backdrop-blur rounded-lg shadow-lg text-xs max-h-[calc(100dvh-16rem)] overflow-y-auto">
         <div className="p-2 border-b border-slate-100">
           <div className="flex gap-1">
             <input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && searchCaja()} placeholder="Buscar caja..." className="flex-1 text-xs bg-slate-50 rounded px-2 py-1.5 outline-none text-slate-700 placeholder-slate-400" />
@@ -177,7 +180,6 @@ export default function MapView() {
             ))}
           </div>}
         </div>
-
         <div className="p-2">
           <p className="text-[11px] font-semibold text-slate-500 uppercase mb-1">Capas</p>
           {layers.map((layer: any) => (
@@ -195,11 +197,6 @@ export default function MapView() {
           ))}
         </div>
       </div>}
-
-      <div className="absolute bottom-3 left-3 z-10 bg-white/90 backdrop-blur rounded-lg shadow-lg px-3 py-1.5 text-[11px] text-slate-500 flex items-center gap-3">
-        <span>{geoJSON?.features?.length || 0} activos</span>
-        <button onClick={() => { mapRef.current?.flyTo([5.15, -75.04], 15); }} className="text-interplay-600 hover:text-interplay-700 font-semibold">📍 Fresno</button>
-      </div>
     </div>
   );
 }
