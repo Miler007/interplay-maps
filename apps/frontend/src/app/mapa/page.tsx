@@ -17,19 +17,22 @@ const iconColors: Record<string, string> = {
 };
 
 const MAP_TYPES = [
-  { key: 'satellite' as const, label: '🛰 Satélite' },
-  { key: 'hybrid' as const, label: '🛰 Híbrido' },
-  { key: 'street' as const, label: '🗺 Calle' },
-  { key: 'topo' as const, label: '🏔 Topo' },
+  { key: 'satellite' as const, label: 'Satélite', icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h2m-2 4h2m16-4h2m-2 4h2M4 8h2m12 0h2M8 4h2m4 0h2"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="8"/></svg>' },
+  { key: 'hybrid' as const, label: 'Híbrido', icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' },
+  { key: 'street' as const, label: 'Calle', icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>' },
+  { key: 'topo' as const, label: 'Topo', icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 11 7 7 11 11 15 7 19 11 21 9"/><polyline points="3 17 7 13 11 17 15 13 19 17 21 15"/></svg>' },
 ];
+
+const Svg = ({ html, className }: { html: string; className?: string }) =>
+  <span className={className} dangerouslySetInnerHTML={{ __html: html }} />;
 
 function featureToPopup(feature: any) {
   const p = feature.properties;
   const color = iconColors[p.type] || '#64748b';
   return `<div style="min-width:200px;font-family:system-ui,sans-serif">
     <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
-      <span style="background:${color};color:white;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600">${p.typeName || p.type}</span>
-      <span style="background:${p.status === 'ACTIVO' ? '#d1fae5' : '#fef3c7'};color:${p.status === 'ACTIVO' ? '#065f46' : '#92400e'};padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600">${p.status}</span>
+      <span style="background:${color};color:white;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:600">${p.typeName || p.type}</span>
+      <span style="background:${p.status === 'ACTIVO' ? '#d1fae5' : '#fef3c7'};color:${p.status === 'ACTIVO' ? '#065f46' : '#92400e'};padding:2px 8px;border-radius:8px;font-size:11px;font-weight:600">${p.status}</span>
     </div>
     <div style="font-weight:700;font-size:14px;color:#0f172a">${p.name}</div>
     <div style="font-size:11px;color:#64748b">${p.code}</div>
@@ -43,8 +46,7 @@ function featureToPopup(feature: any) {
 function pointToLayer(feature: any, latlng: L.LatLng) {
   if (typeof window === 'undefined') return null;
   const L = require('leaflet');
-  const color = iconColors[feature.properties?.type] || '#64748b';
-  return L.circleMarker(latlng, { radius: 8, fillColor: color, color: '#ffffff', weight: 2, opacity: 1, fillOpacity: 0.9 });
+  return L.circleMarker(latlng, { radius: 7, fillColor: iconColors[feature.properties?.type] || '#64748b', color: '#ffffff', weight: 2, opacity: 1, fillOpacity: 0.9 });
 }
 
 function onEachFeature(feature: any, layer: L.Layer) {
@@ -61,34 +63,35 @@ export default function MapPage() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [locating, setLocating] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
+  const [panel, setPanel] = useState(true);
   const mapRef = useRef<any>(null);
 
   const loadLayers = useCallback(async () => {
-    try { const data = await api.layers.getAll(); setLayers(data); if (data.length > 0) setActiveLayers(new Set([data[0].id])); } catch {}
+    try { const d = await api.layers.getAll(); setLayers(d); if (d.length > 0) setActiveLayers(new Set([d[0].id])); } catch {}
   }, []);
 
   const loadGeoJSON = useCallback(async () => {
     try {
       const layerId = activeLayers.size === 1 ? Array.from(activeLayers)[0] : undefined;
-      const params: Record<string, string> = {};
-      if (layerId) params.layerId = layerId;
-      const data = await api.gis.getGeoJSON(params);
-      setGeoJSON(data);
+      const p: Record<string, string> = {};
+      if (layerId) p.layerId = layerId;
+      const d = await api.gis.getGeoJSON(p);
+      setGeoJSON(d);
     } catch {}
   }, [activeLayers]);
 
   useEffect(() => { setIsClient(true); loadLayers(); }, [loadLayers]);
   useEffect(() => { if (isClient) loadGeoJSON(); }, [loadGeoJSON, isClient]);
 
-  const toggleLayer = (layerId: string) => {
-    setActiveLayers((prev) => { const next = new Set(prev); if (next.has(layerId)) next.delete(layerId); else next.add(layerId); return next; });
+  const toggleLayer = (id: string) => {
+    setActiveLayers(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   };
 
   const locateMe = () => {
     if (!navigator.geolocation) return;
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
-      (pos) => { mapRef.current?.flyTo([pos.coords.latitude, pos.coords.longitude], 18); setLocating(false); },
+      (p) => { mapRef.current?.flyTo([p.coords.latitude, p.coords.longitude], 18); setLocating(false); },
       () => setLocating(false), { enableHighAccuracy: true, timeout: 10000 },
     );
   };
@@ -96,8 +99,8 @@ export default function MapPage() {
   const searchCaja = async () => {
     if (!query.trim()) return;
     try {
-      const res = await api.assets.getAll({ search: query });
-      const items = res.data || res;
+      const r = await api.assets.getAll({ search: query });
+      const items = r.data || r || [];
       const list = Array.isArray(items) ? items.slice(0, 10) : [];
       setSearchResults(list);
       if (list.length > 0 && list[0].latitude) mapRef.current?.flyTo([list[0].latitude, list[0].longitude], 18);
@@ -110,21 +113,21 @@ export default function MapPage() {
     : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
   const map = (
-      <MapContainer ref={mapRef} center={[5.15, -75.04]} zoom={15} maxZoom={18} className="h-full w-full" zoomControl={false}>
+    <MapContainer ref={mapRef} center={[5.15, -75.04]} zoom={15} maxZoom={18} className="h-full w-full" zoomControl={false}>
       <ZoomControl position="topright" />
-      <TileLayer url={tileUrl} attribution={mapType === 'street' ? '&copy; OSM' : '&copy; Esri'} />
-      {mapType === 'hybrid' && <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}" attribution="&copy; Esri" opacity={0.6} />}
+      <TileLayer url={tileUrl} attribution="" />
+      {mapType === 'hybrid' && <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}" opacity={0.5} />}
       {geoJSON && <GeoJSON key={JSON.stringify(activeLayers)} data={geoJSON} pointToLayer={pointToLayer as any} onEachFeature={onEachFeature as any} />}
     </MapContainer>
   );
 
-  if (!isClient) return <div className="flex h-dvh items-center justify-center text-slate-400 text-sm">Cargando...</div>;
+  if (!isClient) return <div className="flex h-dvh items-center justify-center bg-slate-50"><div className="animate-spin w-6 h-6 border-2 border-interplay-500 border-t-transparent rounded-full" /></div>;
 
   if (fullscreen) return (
     <div className="h-dvh w-full relative">
       {map}
-      <button onClick={() => setFullscreen(false)} className="absolute top-4 right-4 z-10 bg-white/90 rounded-lg shadow px-3 py-2 text-xs text-slate-600 hover:bg-white">✕ Salir</button>
-      <div className="absolute top-4 left-4 z-10 bg-white/90 rounded-lg shadow px-3 py-1.5 text-xs text-slate-500">{geoJSON?.features?.length || 0} activos</div>
+      <button onClick={() => setFullscreen(false)} className="absolute top-4 right-4 z-10 bg-white/80 backdrop-blur rounded-xl shadow px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-white transition-all">✕ Salir</button>
+      <div className="absolute bottom-4 left-4 z-10 bg-white/80 backdrop-blur rounded-xl shadow px-3.5 py-2 text-xs text-slate-500">{geoJSON?.features?.length || 0} activos</div>
     </div>
   );
 
@@ -132,32 +135,43 @@ export default function MapPage() {
     <div className="flex h-dvh">
       <Sidebar />
       <main className="flex-1 min-w-0 flex flex-col lg:flex-row">
-        <div className="lg:w-72 shrink-0 bg-white border-b lg:border-b-0 lg:border-r border-slate-200 overflow-y-auto">
-          <div className="p-3 lg:p-4 space-y-3">
-            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Mapa</h2>
+        {panel && <div className="lg:w-72 shrink-0 bg-white border-b lg:border-b-0 lg:border-r border-slate-200 overflow-y-auto">
+          <div className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold text-slate-800">Mapa</h2>
+              <button onClick={() => setPanel(false)} className="text-slate-300 hover:text-slate-500 transition-colors">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
 
             <div>
-              <p className="text-[11px] font-semibold text-slate-500 uppercase mb-1.5">Tipo de mapa</p>
-              <div className="grid grid-cols-2 gap-1">
-                {MAP_TYPES.map(({ key, label }) => (
+              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-2">Tipo de mapa</p>
+              <div className="grid grid-cols-2 gap-1.5">
+                {MAP_TYPES.map(({ key, label, icon }) => (
                   <button key={key} onClick={() => setMapType(key)}
-                    className={`px-2 py-2 text-xs rounded-md text-center ${mapType === key ? 'bg-interplay-500 text-white shadow-sm' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>{label}</button>
+                    className={`flex items-center gap-2 px-3 py-2.5 text-xs rounded-xl transition-all ${
+                      mapType === key ? 'bg-slate-900 text-white shadow-sm' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
+                    }`}>
+                    <Svg html={icon} /> {label}
+                  </button>
                 ))}
               </div>
             </div>
 
             <div>
-              <p className="text-[11px] font-semibold text-slate-500 uppercase mb-1.5">Buscar</p>
-              <div className="flex gap-1">
-                <input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && searchCaja()} placeholder="Código de caja..." className="flex-1 text-xs bg-slate-50 rounded px-2 py-2 outline-none text-slate-700 placeholder-slate-400 border border-slate-200" />
-                <button onClick={searchCaja} className="text-xs font-semibold text-white bg-interplay-500 hover:bg-interplay-600 px-3 rounded">🔍</button>
+              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-2">Buscar</p>
+              <div className="flex gap-1.5">
+                <input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && searchCaja()} placeholder="Código..." className="flex-1 text-xs bg-slate-50 rounded-xl px-3 py-2.5 outline-none text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-interplay-500 focus:ring-1 focus:ring-interplay-500/20 transition-all" />
+                <button onClick={searchCaja} className="px-3 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs transition-all">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </button>
               </div>
-              {searchResults.length > 0 && <div className="mt-1 max-h-28 overflow-y-auto border border-slate-200 rounded">
+              {searchResults.length > 0 && <div className="mt-1.5 max-h-32 overflow-y-auto border border-slate-100 rounded-xl">
                 {searchResults.map((r: any) => (
                   <button key={r.id} onClick={() => { mapRef.current?.flyTo([r.latitude, r.longitude], 18); setSearchResults([]); }}
-                    className="flex items-center gap-1.5 w-full text-left px-2 py-1.5 hover:bg-slate-50 rounded text-xs text-slate-700 border-b border-slate-100 last:border-0">
-                    <span style={{ background: iconColors[r.assetType?.code] || '#64748b' }} className="w-2 h-2 rounded-full inline-block shrink-0" />
-                    <strong className="shrink-0">{r.code}</strong>
+                    className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-slate-50 text-xs text-slate-700 border-b border-slate-50 last:border-0 transition-colors">
+                    <span style={{ background: iconColors[r.assetType?.code] || '#64748b' }} className="w-2 h-2 rounded-full shrink-0" />
+                    <strong>{r.code}</strong>
                     <span className="truncate text-slate-400">{r.name}</span>
                   </button>
                 ))}
@@ -165,40 +179,54 @@ export default function MapPage() {
             </div>
 
             <div>
-              <p className="text-[11px] font-semibold text-slate-500 uppercase mb-1.5">Capas</p>
+              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-2">Capas</p>
               {layers.length === 0 && <p className="text-xs text-slate-400">Sin capas</p>}
-              {layers.map((layer: any) => (
-                <label key={layer.id} className="flex items-center gap-1.5 py-1 cursor-pointer">
-                  <input type="checkbox" checked={activeLayers.has(layer.id)} onChange={() => toggleLayer(layer.id)} className="rounded border-slate-300 text-interplay-600 w-3.5 h-3.5" />
-                  <span className="text-xs text-slate-700 truncate">{layer.name}</span>
+              {layers.map((l: any) => (
+                <label key={l.id} className="flex items-center gap-2.5 py-1.5 cursor-pointer group">
+                  <div onClick={() => toggleLayer(l.id)} className={`w-4 h-4 rounded-md border-2 transition-all flex items-center justify-center ${activeLayers.has(l.id) ? 'bg-interplay-500 border-interplay-500' : 'border-slate-300 group-hover:border-slate-400'}`}>
+                    {activeLayers.has(l.id) && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>}
+                  </div>
+                  <span className="text-xs text-slate-600 truncate">{l.name}</span>
                 </label>
               ))}
             </div>
 
             <div>
-              <p className="text-[11px] font-semibold text-slate-500 uppercase mb-1.5">Leyenda</p>
-              {[['CAJA', 'Caja FTTH', '#10b981'], ['CLIENTE', 'Cliente', '#6366f1'], ['NODO', 'Nodo', '#06b6d4'], ['POSTE', 'Poste', '#ef4444'], ['CTO', 'CTO', '#3b82f6']].map(([k, v, c]) => (
-                <div key={k} className="flex items-center gap-1.5 py-0.5">
-                  <span className="w-2.5 h-2.5 rounded-full inline-block shrink-0" style={{ background: c }} />
-                  <span className="text-xs text-slate-500">{v}</span>
-                </div>
-              ))}
+              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-2">Leyenda</p>
+              <div className="space-y-1.5">
+                {[['CAJA', 'Caja FTTH', '#10b981'], ['CLIENTE', 'Cliente', '#6366f1'], ['NODO', 'Nodo', '#06b6d4'], ['POSTE', 'Poste', '#ef4444'], ['CTO', 'CTO', '#3b82f6']].map(([k, v, c]) => (
+                  <div key={k} className="flex items-center gap-2.5">
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: c }} />
+                    <span className="text-xs text-slate-500">{v}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="flex gap-1.5 pt-1">
-              <button onClick={locateMe} disabled={locating} className="flex-1 text-xs bg-slate-50 hover:bg-slate-100 rounded px-3 py-2 text-slate-600 border border-slate-200">{locating ? '📍...' : '📍 GPS'}</button>
-              <button onClick={() => setFullscreen(true)} className="flex-1 text-xs bg-slate-50 hover:bg-slate-100 rounded px-3 py-2 text-slate-600 border border-slate-200">⛶ Pantalla completa</button>
+            <div className="flex gap-1.5 pt-2">
+              <button onClick={locateMe} disabled={locating} className="flex items-center justify-center gap-1.5 flex-1 text-xs bg-slate-50 hover:bg-slate-100 rounded-xl px-3 py-2.5 text-slate-600 border border-slate-200 transition-all">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"/></svg>
+                {locating ? '...' : 'GPS'}
+              </button>
+              <button onClick={() => setFullscreen(true)} className="flex items-center justify-center flex-1 text-xs bg-slate-50 hover:bg-slate-100 rounded-xl px-3 py-2.5 text-slate-600 border border-slate-200 transition-all">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                Full
+              </button>
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-slate-400 pt-1 border-t border-slate-100">
-              <span>{geoJSON?.features?.length || 0} activos visibles</span>
+            <div className="flex items-center gap-2 text-xs text-slate-400 pt-2 border-t border-slate-100">
+              <span>{geoJSON?.features?.length || 0} activos</span>
+              <span className="w-1 h-1 rounded-full bg-slate-300" />
               <button onClick={() => mapRef.current?.flyTo([5.15, -75.04], 15)} className="text-interplay-600 hover:text-interplay-700 font-semibold">📍 Fresno</button>
             </div>
           </div>
-        </div>
-        <div className="flex-1 min-h-0 relative">
-          {map}
-        </div>
+        </div>}
+
+        {!panel && <button onClick={() => setPanel(true)} className="absolute top-4 left-20 z-10 bg-white/80 backdrop-blur rounded-xl shadow px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-white transition-all lg:static lg:flex lg:self-start lg:m-4">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>}
+
+        <div className="flex-1 min-h-0 relative">{map}</div>
       </main>
     </div>
   );
