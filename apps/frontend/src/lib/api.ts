@@ -65,7 +65,7 @@ export const api = {
   assets: {
     getAll: (params?: Record<string, string>) => {
       const query = params ? '?' + new URLSearchParams(params).toString() : '';
-      return fetchApi<{ data: any[]; meta: any }>(`/assets${query}`);
+      return fetchApi<any>(`/assets${query}`);
     },
     getById: (id: string) => fetchApi<any>(`/assets/${id}`),
     create: (data: any) => fetchApi<any>('/assets', { method: 'POST', body: JSON.stringify(data) }),
