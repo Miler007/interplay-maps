@@ -82,6 +82,7 @@ export default function MapPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [ctxMenu, setCtxMenu] = useState<any>(null);
   const dragMarkerRef = useRef<any>(null);
+  const dragPosRef = useRef<{lat: number; lng: number} | null>(null);
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const [mouseLat, setMouseLat] = useState(0);
   const [mouseLng, setMouseLng] = useState(0);
@@ -323,7 +324,7 @@ export default function MapPage() {
             ))}
             {drawings.map((d: any, i: number) => d.type === 'line' ? <Polyline key={`d-${i}`} positions={d.positions} pathOptions={{ color: '#8b5cf6', weight: 4 }} /> : null)}
             {drawings.map((d: any, i: number) => d.type === 'polygon' ? <Polygon key={`dp-${i}`} positions={d.positions} pathOptions={{ color: '#3b82f6', fillOpacity: 0.15 }} /> : null)}
-            {editingFeature && <DraggableMarker lat={editLat} lng={editLng} markerRef={dragMarkerRef} onMove={(lat, lng) => { setEditLat(lat); setEditLng(lng); }} />}
+            {editingFeature && <DraggableMarker lat={editLat} lng={editLng} markerRef={dragMarkerRef} onMove={(lat, lng) => { setEditLat(lat); setEditLng(lng); dragPosRef.current = {lat, lng}; }} />}
             <MapClickHandler onAddMode={addModeActive || activeTool === 'measure' || activeTool === 'add-marker' || activeTool === 'draw-line' || activeTool === 'draw-polygon'}
               onMapClick={handleMapClick} onContextMenu={handleContextMenu} onMouseMove={handleMouseMove} onZoomChange={setZoomLevel}
             />
@@ -408,11 +409,11 @@ export default function MapPage() {
                 <div className="flex gap-2 pt-1">
                   <button onClick={async () => {
                     if (!editCode.trim()) return;
-                    const pos = dragMarkerRef.current?.getLatLng();
-                    const saveLat = pos ? +pos.lat.toFixed(5) : editLat;
-                    const saveLng = pos ? +pos.lng.toFixed(5) : editLng;
+                    const saveLat = dragPosRef.current?.lat ?? editLat;
+                    const saveLng = dragPosRef.current?.lng ?? editLng;
                     try { await api.assets.update(editingFeature.id, { code: editCode, name: editName, latitude: saveLat, longitude: saveLng }); }
                     catch { try { await mockApi.assets.update(editingFeature.id, { code: editCode, name: editName, latitude: saveLat, longitude: saveLng }); } catch {} }
+                    dragPosRef.current = null;
                     setEditingFeature(null); loadGeoJSON();
                   }} className="flex-1 px-3 py-2 bg-interplay-500 text-white rounded-xl text-xs font-semibold hover:bg-interplay-600">💾 Guardar</button>
                   <button onClick={() => setEditingFeature(null)} className="px-3 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-200">✕</button>
