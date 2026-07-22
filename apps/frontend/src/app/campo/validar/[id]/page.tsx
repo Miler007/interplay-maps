@@ -65,6 +65,8 @@ export default function FieldValidationPage() {
   const [isClient, setIsClient] = useState(false);
   const [purpleIcon, setPurpleIcon] = useState<any>();
   const [blueIcon, setBlueIcon] = useState<any>();
+  const [whatsappText, setWhatsappText] = useState('');
+  const [parsedClients, setParsedClients] = useState<string[]>([]);
   useEffect(() => { setIsClient(true); 
     const loadIcons = async () => {
       try {
@@ -261,6 +263,65 @@ export default function FieldValidationPage() {
                 </button>
               </div>}
             </div>
+          </div>
+        </div>
+
+        <div className={S.card}>
+          <div className={S.cardHeader}><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="text-emerald-500"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><h2 className="font-semibold text-sm text-slate-800">Pegar texto de WhatsApp</h2></div>
+          <div className={S.cardBody}>
+            <textarea value={whatsappText} onChange={e => {
+              setWhatsappText(e.target.value);
+              const lines = e.target.value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+              const names: string[] = [];
+              let obsExtra = '';
+              for (const line of lines) {
+                const upper = line.toUpperCase();
+                if (upper.startsWith('CAJA') || upper.startsWith('POTENCIA') || upper.startsWith('POTENCIA EN CAJA')) {
+                  obsExtra += (obsExtra ? '. ' : '') + line;
+                  continue;
+                }
+                if (/^-?\d+(\.\d+)?$/.test(line.replace(/\s/g, ''))) continue;
+                if (line.length > 3 && !line.includes('http') && !line.startsWith('@')) {
+                  names.push(line);
+                }
+              }
+              setParsedClients(names);
+              if (obsExtra) setObs(prev => [prev, obsExtra].filter(Boolean).join('. '));
+            }} rows={4} className={S.input} placeholder={`Pega aquí el texto de WhatsApp, ejemplo:
+CAJA 1.1
+CAROLINA PAZ
+JHON JAIRO MORALES
+...
+POTENCIA EN CAJA -18`} />
+            {parsedClients.length > 0 && <div className="mt-3">
+              <p className="text-xs font-semibold text-slate-500 mb-2">{parsedClients.length} clientes detectados</p>
+              <div className="max-h-32 overflow-y-auto space-y-0.5 mb-3">
+                {parsedClients.map((name, i) => (
+                  <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-lg text-xs text-slate-700">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                    {name}
+                  </div>
+                ))}
+              </div>
+              <button onClick={async () => {
+                if (freePorts < parsedClients.length) { alert(`Solo hay ${freePorts} puertos libres, no se pueden agregar ${parsedClients.length} clientes`); return; }
+                setSaving(true);
+                let added = 0;
+                for (const name of parsedClients) {
+                  try {
+                    await api.assets.create({ code: `CLI-${Date.now()}-${asset?.code || id}`, name, assetTypeId: 'd5ba7941-8e96-4521-b710-807be644059a', departmentId: asset?.departmentId || '', municipalityId: asset?.municipalityId || '', projectId: asset?.projectId || '' }).catch(() => {});
+                    added++;
+                  } catch {}
+                }
+                setFreePorts(p => p - added);
+                setParsedClients([]);
+                setWhatsappText('');
+                setSaving(false);
+                alert(`✅ ${added} clientes agregados`);
+              }} className="w-full px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-50" disabled={saving || freePorts < parsedClients.length}>
+                ✅ Agregar {parsedClients.length} cliente{parsedClients.length !== 1 ? 's' : ''} ({freePorts} puertos libres)
+              </button>
+            </div>}
           </div>
         </div>
 
