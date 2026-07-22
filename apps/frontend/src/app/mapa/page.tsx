@@ -61,6 +61,7 @@ export default function MapPage() {
   const [editLat, setEditLat] = useState(0);
   const [editLng, setEditLng] = useState(0);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; lat: number; lng: number; feature?: any } | null>(null);
   const mapRef = useRef<any>(null);
 
   const [isOffline, setIsOffline] = useState(false);
@@ -135,7 +136,10 @@ export default function MapPage() {
       <TileLayer url={tileUrl} attribution="" />
       {mapType === 'hybrid' && <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}" opacity={0.5} />}
       {geoJSON && <GeoJSON key={JSON.stringify(activeLayers)} data={geoJSON} pointToLayer={pointToLayer as any}
-        onEachFeature={(f: any, l: any) => { if (f.properties) l.on({ click: () => setSelectedFeature(f) }); }}
+        onEachFeature={(f: any, l: any) => { if (f.properties) l.on({
+          click: () => setSelectedFeature(f),
+          contextmenu: (e: any) => { e.originalEvent.preventDefault(); setCtxMenu({ x: e.originalEvent.clientX, y: e.originalEvent.clientY, lat: e.latlng.lat, lng: e.latlng.lng, feature: f }); },
+        }); }}
       />}
       {addPos && addingCaja && <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 w-72">
         <p className="text-xs font-semibold text-slate-500 uppercase mb-2">Agregar caja en ubicación</p>
@@ -265,7 +269,7 @@ export default function MapPage() {
         }}
       />}
 
-      <MapClickHandler onAddMode={addModeActive} onMapClick={(pos) => { setAddPos(pos); setAddingCaja(true); setAddModeActive(false); }} />
+      <MapClickHandler onAddMode={addModeActive} onMapClick={(pos) => { setAddPos(pos); setAddingCaja(true); setAddModeActive(false); }} onContextMenu={(pos, e) => { setCtxMenu({ x: e.clientX, y: e.clientY, lat: pos.lat, lng: pos.lng }); }} />
     </MapContainer>
   );
 
@@ -373,6 +377,34 @@ export default function MapPage() {
             </div>
           </div>
         </div>}
+
+        {ctxMenu && <>
+          <div className="fixed inset-0 z-30" onClick={() => setCtxMenu(null)} onContextMenu={(e) => { e.preventDefault(); setCtxMenu(null); }} />
+          <div className="fixed z-40 bg-white rounded-2xl shadow-2xl border border-slate-200 py-1.5 w-52" style={{ left: ctxMenu.x, top: ctxMenu.y }}>
+            {ctxMenu.feature ? <>
+              <button className="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2.5" onClick={() => { const p = ctxMenu.feature.properties; setEditingFeature({ id: p.id, code: p.code, name: p.name, type: p.type, lat: ctxMenu.lat, lng: ctxMenu.lng }); setEditCode(p.code); setEditName(p.name); setEditLat(ctxMenu.lat); setEditLng(ctxMenu.lng); setConfirmDelete(false); setSelectedFeature(null); setCtxMenu(null); }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="M15 5l4 4"/></svg> Editar
+              </button>
+              <button className="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-red-50 flex items-center gap-2.5" onClick={async () => {
+                const id = ctxMenu.feature.properties.id;
+                try { await api.assets.delete(id); } catch { try { await mockApi.assets.delete(id); } catch {} }
+                setCtxMenu(null); loadGeoJSON();
+              }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg> Eliminar
+              </button>
+              <hr className="my-1 border-slate-100" />
+            </> : null}
+            <button className="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2.5" onClick={() => { setAddModeActive(false); setAddPos({ lat: ctxMenu.lat, lng: ctxMenu.lng }); setAddingCaja(true); setCtxMenu(null); }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Agregar caja
+            </button>
+            <button className="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2.5" onClick={() => { setCtxMenu(null); mapRef.current?.flyTo([ctxMenu.lat, ctxMenu.lng], 18); }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"/></svg> Centrar aquí
+            </button>
+            <button className="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2.5" onClick={() => { alert(`📍 ${ctxMenu.lat.toFixed(5)}, ${ctxMenu.lng.toFixed(5)}`); setCtxMenu(null); }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ¿Qué hay aquí?
+            </button>
+          </div>
+        </>}
 
         {isOffline && <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-amber-50 border border-amber-200 text-amber-700 text-xs px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1.5">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 6a6 6 0 0 1 6 6"/><path d="M12 10a2 2 0 0 1 2 2"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
