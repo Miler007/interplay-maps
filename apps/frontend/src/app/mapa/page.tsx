@@ -412,9 +412,17 @@ export default function MapPage() {
                     const saveLat = dragPosRef.current?.lat ?? editLat;
                     const saveLng = dragPosRef.current?.lng ?? editLng;
                     try { await api.assets.update(editingFeature.id, { code: editCode, name: editName, latitude: saveLat, longitude: saveLng }); }
-                    catch { try { await mockApi.assets.update(editingFeature.id, { code: editCode, name: editName, latitude: saveLat, longitude: saveLng }); } catch {} }
+                    catch {
+                      try { await mockApi.assets.update(editingFeature.id, { code: editCode, name: editName, latitude: saveLat, longitude: saveLng }); } catch (e) {}
+                      setGeoJSON((prev: any) => {
+                        if (!prev) return prev;
+                        return { ...prev, features: prev.features.map((f: any) =>
+                          f.properties?.id === editingFeature.id ? { ...f, geometry: { ...f.geometry, coordinates: [saveLng, saveLat] }, properties: { ...f.properties, code: editCode, name: editName } } : f
+                        )};
+                      });
+                    }
                     dragPosRef.current = null;
-                    setEditingFeature(null); loadGeoJSON();
+                    setEditingFeature(null);
                   }} className="flex-1 px-3 py-2 bg-interplay-500 text-white rounded-xl text-xs font-semibold hover:bg-interplay-600">💾 Guardar</button>
                   <button onClick={() => setEditingFeature(null)} className="px-3 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-200">✕</button>
                   {!confirmDelete ? (
