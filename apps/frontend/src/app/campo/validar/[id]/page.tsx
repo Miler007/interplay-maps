@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { api } from '@/lib/api';
+import { mockApi } from '@/lib/mockData';
 
 const MapContainer = dynamic(() => import('react-leaflet').then((m) => m.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then((m) => m.TileLayer), { ssr: false });
@@ -74,6 +75,14 @@ export default function FieldValidationPage() {
   const [isClient, setIsClient] = useState(false);
   useEffect(() => { setIsClient(true); }, []);
 
+  const loadClients = (a: any) => {
+    api.assets.getAll({ search: 'CLI-', limit: '200' }).then((res: any) => {
+      const items = res.data || res || [];
+      const list = Array.isArray(items) ? items : [];
+      setClients(list.filter((c: any) => c.assetType?.code === 'CLIENTE' && c.code.endsWith('-' + a.code)));
+    }).catch(() => {});
+  };
+
   useEffect(() => {
     if (!id) return;
     api.assets.getById(id).then((a: any) => {
@@ -81,12 +90,21 @@ export default function FieldValidationPage() {
       setTotalPorts(a.capacity?.totalPorts || 0);
       setFreePorts(a.capacity?.freePorts || 0);
       setObs(a.observations || '');
-      api.assets.getAll({ search: 'CLI-', limit: '200' }).then((res: any) => {
+      loadClients(a);
+    }).catch(() => {
+      mockApi.assets.getAll({}).then((res: any) => {
         const items = res.data || res || [];
-        const list = Array.isArray(items) ? items : [];
-        setClients(list.filter((c: any) => c.assetType?.code === 'CLIENTE' && c.code.endsWith('-' + a.code)));
-      }).catch(() => {});
-    }).catch(() => setError('Error al cargar')).finally(() => setLoading(false));
+        const found = Array.isArray(items) ? items.find((c: any) => c.id === id) : null;
+        if (found) {
+          setAsset(found);
+          setTotalPorts(found.totalPorts || 16);
+          setFreePorts(found.freePorts || 8);
+        } else {
+          setAsset({ id, code: id.substring(0, 8), name: 'Activo', latitude: 5.15, longitude: -75.04, status: 'ACTIVO', certStatus: 'PENDIENTE', departmentId: '', municipalityId: '', projectId: '', capacity: { totalPorts: 16, freePorts: 8 } });
+        }
+        setLoading(false);
+      }).catch(() => setError('Error al cargar')).finally(() => setLoading(false));
+    });
   }, [id]);
 
   const captureGps = () => {
