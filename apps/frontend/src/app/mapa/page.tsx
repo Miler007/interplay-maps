@@ -11,6 +11,18 @@ const TileLayer = dynamic(() => import('react-leaflet').then((m) => m.TileLayer)
 const GeoJSON = dynamic(() => import('react-leaflet').then((m) => m.GeoJSON), { ssr: false });
 const ZoomControl = dynamic(() => import('react-leaflet').then((m) => m.ZoomControl), { ssr: false });
 
+const MapClickHandler = dynamic(() => import('react-leaflet').then((m) => {
+  const { useMapEvents } = m;
+  return ({ onAddMode, onMapClick }: { onAddMode: boolean; onMapClick: (latlng: { lat: number; lng: number }) => void }) => {
+    useMapEvents({
+      click(e) {
+        if (onAddMode) onMapClick({ lat: +e.latlng.lat.toFixed(5), lng: +e.latlng.lng.toFixed(5) });
+      },
+    });
+    return null;
+  };
+}), { ssr: false });
+
 const iconColors: Record<string, string> = {
   CAJA: '#10b981', CAJAS: '#10b981', CLIENTE: '#6366f1',
   NODO: '#06b6d4', NODOS: '#06b6d4', POSTE: '#ef4444', POSTES: '#ef4444',
@@ -66,6 +78,7 @@ export default function MapPage() {
   const [fullscreen, setFullscreen] = useState(false);
   const [panel, setPanel] = useState(true);
   const [addingCaja, setAddingCaja] = useState(false);
+  const [addModeActive, setAddModeActive] = useState(false);
   const [addPos, setAddPos] = useState<{ lat: number; lng: number } | null>(null);
   const [newCode, setNewCode] = useState('');
   const [newPorts, setNewPorts] = useState(16);
@@ -144,9 +157,9 @@ export default function MapPage() {
       <TileLayer url={tileUrl} attribution="" />
       {mapType === 'hybrid' && <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}" opacity={0.5} />}
       {geoJSON && <GeoJSON key={JSON.stringify(activeLayers)} data={geoJSON} pointToLayer={pointToLayer as any} onEachFeature={onEachFeature as any} />}
-      {addingCaja && <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 w-72">
+      {addPos && addingCaja && <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 w-72">
         <p className="text-xs font-semibold text-slate-500 uppercase mb-2">Agregar caja en ubicación</p>
-        <p className="text-xs text-slate-400 mb-3 font-mono">{addPos?.lat.toFixed(5)}, {addPos?.lng.toFixed(5)}</p>
+        <p className="text-xs text-slate-400 mb-3 font-mono">{addPos.lat.toFixed(5)}, {addPos.lng.toFixed(5)}</p>
         <div className="space-y-2">
           <input value={newCode} onChange={e => setNewCode(e.target.value)} placeholder="Código (ej: 16.1)" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-interplay-500" />
           <div className="grid grid-cols-2 gap-2">
@@ -159,7 +172,6 @@ export default function MapPage() {
             <button onClick={async () => {
               if (!newCode.trim() || !addPos) return;
               try {
-                try {
                 await api.assets.create({
                   code: newCode, name: `CAJA ${newCode}`, assetTypeId: '8e3e137d-791b-43c3-8dc8-29fe15bda19d',
                   departmentId: 'a84105b4-eda4-4246-8361-8678d41bd0e7', municipalityId: 'e4ff7e38-cd79-452c-a1d3-370d7080adb4',
@@ -171,13 +183,19 @@ export default function MapPage() {
                   code: newCode, name: `CAJA ${newCode}`, latitude: addPos.lat, longitude: addPos.lng, status: 'ACTIVO',
                 });
               }
-                setAddingCaja(false); setNewCode(''); alert('✅ Caja agregada'); loadGeoJSON();
-              } catch { alert('Error'); }
+              setAddingCaja(false); setAddModeActive(false); setNewCode(''); setAddPos(null); alert('✅ Caja agregada'); loadGeoJSON();
             }} className="flex-1 px-3 py-2 bg-emerald-500 text-white rounded-xl text-xs font-semibold hover:bg-emerald-600">✅ Agregar</button>
-            <button onClick={() => setAddingCaja(false)} className="px-3 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-200">✕</button>
+            <button onClick={() => { setAddingCaja(false); setAddModeActive(false); setAddPos(null); }} className="px-3 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-200">✕</button>
           </div>
         </div>
       </div>}
+
+      {addModeActive && !addingCaja && <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 bg-interplay-500 text-white text-xs px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+        <div className="animate-pulse w-2 h-2 bg-white rounded-full" />
+        Haz clic en el mapa para colocar la caja
+      </div>}
+
+      <MapClickHandler onAddMode={addModeActive} onMapClick={(pos) => { setAddPos(pos); setAddingCaja(true); setAddModeActive(false); }} />
     </MapContainer>
   );
 
@@ -268,9 +286,9 @@ export default function MapPage() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"/></svg>
                 {locating ? '...' : 'GPS'}
               </button>
-              <button onClick={() => { if (!navigator.geolocation) return; navigator.geolocation.getCurrentPosition(p => { setAddPos({ lat: +p.coords.latitude.toFixed(5), lng: +p.coords.longitude.toFixed(5) }); setAddingCaja(true); }); }} className="flex items-center justify-center gap-1.5 flex-1 text-xs bg-emerald-50 hover:bg-emerald-100 rounded-xl px-3 py-2.5 text-emerald-600 border border-emerald-200 transition-all">
+              <button onClick={() => { if (addModeActive) { setAddModeActive(false); return; } setAddModeActive(true); setAddingCaja(false); setAddPos(null); }} className={`flex items-center justify-center gap-1.5 flex-1 text-xs rounded-xl px-3 py-2.5 border transition-all ${addModeActive ? 'bg-interplay-500 text-white border-interplay-500' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border-emerald-200'}`}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                + Caja
+                {addModeActive ? '✕' : '+ Caja'}
               </button>
               <button onClick={() => setFullscreen(true)} className="flex items-center justify-center flex-1 text-xs bg-slate-50 hover:bg-slate-100 rounded-xl px-3 py-2.5 text-slate-600 border border-slate-200 transition-all">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
