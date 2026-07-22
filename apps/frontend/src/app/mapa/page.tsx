@@ -191,14 +191,8 @@ export default function MapPage() {
   return (
     <div className="flex h-dvh bg-slate-900">
       <Sidebar />
-      <main className="flex-1 min-w-0 flex flex-col">
-        <div className="flex-1 min-h-0 flex">
-          {!isClient && <div className="absolute inset-0 flex items-center justify-center bg-slate-900 z-50">
-            <div className="animate-spin w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full" />
-          </div>}
-
-          {/* Side Panel - no overlap, pushes map */}
-          <div className="w-72 shrink-0 bg-white/95 backdrop-blur-xl border-r border-slate-200/80 overflow-y-auto">
+      <main className="flex-1 min-w-0 flex">
+        <div className="w-72 shrink-0 bg-white/95 backdrop-blur-xl border-r border-slate-200/80 overflow-y-auto h-full">
             <div className="p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
@@ -305,8 +299,10 @@ export default function MapPage() {
             </div>
           </div>
 
-          <div className="flex-1 min-w-0 relative">
-          {isClient && <MapContainer ref={mapRef} center={[5.15, -75.04]} zoom={15} maxZoom={19} className="h-full w-full" zoomControl={false}>
+          <div className="flex-1 relative">
+          {!isClient ? <div className="flex items-center justify-center h-full bg-slate-900">
+            <div className="animate-spin w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full" />
+          </div> : <MapContainer ref={mapRef} center={[5.15, -75.04]} zoom={15} maxZoom={19} className="h-full w-full" zoomControl={false}>
             <TileLayer url={tileUrl} attribution="" />
             {mapType === 'hybrid' && <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}" opacity={0.5} />}
             <ScaleControl position="bottomleft" metric={true} imperial={false} />
@@ -532,7 +528,6 @@ export default function MapPage() {
               </button>
             </div>
           </>}
-        </div>
         </div>
       </main>
     </div>
