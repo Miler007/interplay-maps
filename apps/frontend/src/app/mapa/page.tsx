@@ -481,19 +481,19 @@ export default function MapPage() {
             Haz clic en el mapa para colocar el activo
           </div>}
 
-          {/* Toolbar */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000]">
+          {/* Toolbar - only when a tool is active */}
+          {activeTool && <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000]">
             <PremiumToolbar activeTool={activeTool} onToolChange={setActiveTool} onClearAll={clearDrawings} distance={activeTool === 'measure' ? distStr : undefined} />
-          </div>
+          </div>}
 
-          {/* Status bar */}
-          <div className="absolute bottom-4 right-4 z-[1000]">
-            <StatusBar lat={mouseLat} lng={mouseLng} zoom={zoomLevel} count={filteredFeatures()?.features?.length || 0}
+          {/* Status bar - only when measuring or editing */}
+          {(activeTool === 'measure' || editingFeature) && <div className="absolute bottom-4 right-4 z-[1000]">
+            <StatusBar lat={activeTool === 'measure' ? mouseLat : editLat} lng={activeTool === 'measure' ? mouseLng : editLng} zoom={zoomLevel} count={filteredFeatures()?.features?.length || 0}
               layerName={activeLayers.size === 1 ? layers.find(l => l.id === Array.from(activeLayers)[0])?.name : undefined}
               isOffline={isOffline} isClient={isClient}
               onZoomIn={() => mapRef.current?.zoomIn()} onZoomOut={() => mapRef.current?.zoomOut()}
             />
-          </div>
+          </div>}
 
           {/* Context Menu */}
           {ctxMenu && <>
