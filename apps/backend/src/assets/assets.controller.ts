@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Patch, Delete, Param, Body, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { AssetsService } from './assets.service';
 
@@ -31,6 +31,7 @@ export class AssetsController {
     return this.assets.create(body);
   }
 
+  @Put(':id')
   @Patch(':id')
   @ApiOperation({ summary: 'Actualizar activo' })
   update(@Param('id') id: string, @Body() body: any) {
