@@ -44,6 +44,11 @@ function purpleIcon() {
   try { return (window as any).L.divIcon({ className: '', html: '<div style="width:28px;height:28px;background:#a855f7;border-radius:50%;border:3px solid rgba(255,255,255,.95);box-shadow:0 2px 16px rgba(168,85,247,.6),0 0 0 4px rgba(168,85,247,.2);cursor:grab"></div><div style="width:2px;height:16px;background:rgba(168,85,247,.4);margin:0 auto"></div>', iconSize: [28, 46], iconAnchor: [14, 46] }); }
   catch { return undefined; }
 }
+function blueIcon() {
+  if (typeof window === 'undefined') return undefined;
+  try { return (window as any).L.divIcon({ className: '', html: '<div style="width:20px;height:20px;background:#3b82f6;border-radius:50%;border:3px solid rgba(255,255,255,.9);box-shadow:0 2px 8px rgba(0,0,0,.2)"></div>', iconSize: [20, 20], iconAnchor: [10, 10] }); }
+  catch { return undefined; }
+}
 function SvgIcon({ html, className }: { html: string; className?: string }) {
   return <span className={className} dangerouslySetInnerHTML={{ __html: html }} />;
 }
@@ -151,6 +156,7 @@ export default function FieldValidationPage() {
             {!gps && asset.latitude && isClient && <div className="h-40 rounded-xl overflow-hidden border border-slate-200 opacity-60">
               <MapContainer center={[asset.latitude, asset.longitude]} zoom={16} className="h-full w-full" zoomControl={false} scrollWheelZoom={false}>
                 <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" attribution="" />
+                <Marker position={[asset.latitude, asset.longitude]} icon={blueIcon()} />
               </MapContainer>
             </div>}
             {gps && <p className="text-xs text-slate-400 mt-2 text-center font-mono">{gps.lat}, {gps.lng}</p>}
