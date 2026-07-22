@@ -91,6 +91,7 @@ export default function FieldValidationPage() {
       setTotalPorts(a.capacity?.totalPorts || 0);
       setFreePorts(a.capacity?.freePorts || 0);
       setObs(a.observations || '');
+      setLoading(false);
       loadClients(a);
     }).catch(() => {
       mockApi.assets.getAll({}).then((res: any) => {
@@ -104,7 +105,7 @@ export default function FieldValidationPage() {
           setAsset({ id, code: id.substring(0, 8), name: 'Activo', latitude: 5.15, longitude: -75.04, status: 'ACTIVO', certStatus: 'PENDIENTE', departmentId: '', municipalityId: '', projectId: '', capacity: { totalPorts: 16, freePorts: 8 } });
         }
         setLoading(false);
-      }).catch(() => setError('Error al cargar')).finally(() => setLoading(false));
+      }).catch(() => { setError('Error al cargar'); setLoading(false); });
     });
   }, [id]);
 
