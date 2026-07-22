@@ -66,7 +66,14 @@ export default function FieldValidationPage() {
   const [purpleIcon, setPurpleIcon] = useState<any>();
   const [blueIcon, setBlueIcon] = useState<any>();
   useEffect(() => { setIsClient(true); 
-    try { const L = (window as any).L || require('leaflet'); setPurpleIcon(L.divIcon({ className: '', html: '<div style="width:28px;height:28px;background:#a855f7;border-radius:50%;border:3px solid rgba(255,255,255,.95);box-shadow:0 2px 16px rgba(168,85,247,.6),0 0 0 4px rgba(168,85,247,.2);cursor:grab"></div><div style="width:2px;height:16px;background:rgba(168,85,247,.4);margin:0 auto"></div>', iconSize: [28, 46], iconAnchor: [14, 46] })); setBlueIcon(L.divIcon({ className: '', html: '<div style="width:20px;height:20px;background:#3b82f6;border-radius:50%;border:3px solid rgba(255,255,255,.9);box-shadow:0 2px 8px rgba(0,0,0,.2)"></div>', iconSize: [20, 20], iconAnchor: [10, 10] })); } catch {}
+    const loadIcons = async () => {
+      try {
+        const L = (window as any).L || await import('leaflet').then(m => m.default || m);
+        setPurpleIcon(L.divIcon({ className: '', html: '<div style="width:28px;height:28px;background:#a855f7;border-radius:50%;border:3px solid rgba(255,255,255,.95);box-shadow:0 2px 16px rgba(168,85,247,.6),0 0 0 4px rgba(168,85,247,.2);cursor:grab"></div><div style="width:2px;height:16px;background:rgba(168,85,247,.4);margin:0 auto"></div>', iconSize: [28, 46], iconAnchor: [14, 46] }));
+        setBlueIcon(L.divIcon({ className: '', html: '<div style="width:20px;height:20px;background:#3b82f6;border-radius:50%;border:3px solid rgba(255,255,255,.9);box-shadow:0 2px 8px rgba(0,0,0,.2)"></div>', iconSize: [20, 20], iconAnchor: [10, 10] }));
+      } catch {}
+    };
+    loadIcons();
   }, []);
 
   const loadClients = (a: any) => {
@@ -160,15 +167,15 @@ export default function FieldValidationPage() {
               <MapContainer center={[gps.lat, gps.lng]} zoom={19} className="h-full w-full" zoomControl={false} scrollWheelZoom={true}>
                 <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" attribution="" />
                 <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}" attribution="" opacity={0.5} />
-                <Marker position={[gps.lat, gps.lng]} draggable={true} icon={purpleIcon}
+                {purpleIcon && <Marker position={[gps.lat, gps.lng]} draggable={true} icon={purpleIcon}
                   eventHandlers={{ dragend: (e: any) => { const p = e.target.getLatLng(); setGps({ lat: +p.lat.toFixed(5), lng: +p.lng.toFixed(5) }); } }}
-                />
+                />}
               </MapContainer>
             </div>}
             {!gps && asset.latitude && isClient && <div className="h-40 rounded-xl overflow-hidden border border-slate-200 opacity-60">
               <MapContainer center={[asset.latitude, asset.longitude]} zoom={16} className="h-full w-full" zoomControl={false} scrollWheelZoom={false}>
                 <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" attribution="" />
-                <Marker position={[asset.latitude, asset.longitude]} icon={blueIcon} />
+                {blueIcon && <Marker position={[asset.latitude, asset.longitude]} icon={blueIcon} />}
               </MapContainer>
             </div>}
             {gps && <p className="text-xs text-slate-400 mt-2 text-center font-mono">{gps.lat}, {gps.lng}</p>}
