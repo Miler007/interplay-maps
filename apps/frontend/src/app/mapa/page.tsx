@@ -375,7 +375,9 @@ export default function MapPage() {
                   }} className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-semibold text-slate-700 transition-all">✏️ Editar</button>
                   <button onClick={async () => {
                     try { await api.assets.delete(p.id); } catch { try { await mockApi.assets.delete(p.id); } catch {} }
-                    setSelectedFeature(null); loadGeoJSON();
+                    setGeoJSON((prev: any) => { if (!prev) return prev; return { ...prev, features: prev.features.filter((f: any) => f.properties?.id !== p.id) }; });
+                    setRevision(r => r + 1);
+                    setSelectedFeature(null);
                   }} className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-500 rounded-xl text-xs font-semibold border border-red-200 transition-all">🗑️</button>
                 </div>
               </div>
@@ -438,7 +440,9 @@ export default function MapPage() {
                   ) : (
                     <button onClick={async () => {
                       try { await api.assets.delete(editingFeature.id); } catch { try { await mockApi.assets.delete(editingFeature.id); } catch {} }
-                      setEditingFeature(null); setConfirmDelete(false); loadGeoJSON();
+                      setGeoJSON((prev: any) => { if (!prev) return prev; return { ...prev, features: prev.features.filter((f: any) => f.properties?.id !== editingFeature.id) }; });
+                      setRevision(r => r + 1);
+                      setEditingFeature(null); setConfirmDelete(false);
                     }} className="px-3 py-2 bg-red-500 text-white rounded-xl text-xs font-semibold hover:bg-red-600">Confirmar</button>
                   )}
                 </div>
@@ -490,7 +494,14 @@ export default function MapPage() {
                       });
                       await api.capacity?.update?.(newCode, { totalPorts: newPorts, freePorts: newFree, usedPorts: newPorts - newFree })?.catch?.() || null;
                     } catch { await mockApi.assets.create({ code: newCode, name: `${addType} ${newCode}`, latitude: addPos.lat, longitude: addPos.lng, status: 'ACTIVO' }); }
-                    setAddingCaja(false); setAddModeActive(false); setNewCode(''); setAddPos(null); loadGeoJSON();
+                    const newFeature = {
+                      type: 'Feature',
+                      geometry: { type: 'Point', coordinates: [addPos.lng, addPos.lat] },
+                      properties: { id: 'mock-' + Date.now(), type: addType, typeName: ASSET_TYPES.find(t => t.code === addType)?.label || addType, name: `${addType} ${newCode}`, code: newCode, status: 'ACTIVO', department: 'Tolima', municipality: 'Fresno', confidenceScore: 100, healthScore: 100 },
+                    };
+                    setGeoJSON((prev: any) => { if (!prev) return prev; return { ...prev, features: [...prev.features, newFeature] }; });
+                    setRevision(r => r + 1);
+                    setAddingCaja(false); setAddModeActive(false); setNewCode(''); setAddPos(null);
                   }} className="flex-1 px-3 py-2 bg-emerald-500 text-white rounded-xl text-xs font-semibold hover:bg-emerald-600">✅ Crear</button>
                   <button onClick={() => { setAddingCaja(false); setAddModeActive(false); setAddPos(null); }} className="px-3 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-200">✕</button>
                 </div>
@@ -534,7 +545,9 @@ export default function MapPage() {
                 <button className="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-red-50 flex items-center gap-2.5 transition-all" onClick={async () => {
                   const id = ctxMenu.feature.properties.id;
                   try { await api.assets.delete(id); } catch { try { await mockApi.assets.delete(id); } catch {} }
-                  setCtxMenu(null); loadGeoJSON();
+                  setGeoJSON((prev: any) => { if (!prev) return prev; return { ...prev, features: prev.features.filter((f: any) => f.properties?.id !== id) }; });
+                  setRevision(r => r + 1);
+                  setCtxMenu(null);
                 }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Eliminar
                 </button>
