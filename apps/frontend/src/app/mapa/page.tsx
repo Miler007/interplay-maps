@@ -83,6 +83,7 @@ export default function MapPage() {
   const [ctxMenu, setCtxMenu] = useState<any>(null);
   const dragMarkerRef = useRef<any>(null);
   const dragPosRef = useRef<{lat: number; lng: number} | null>(null);
+  const geoLayerRef = useRef<any>(null);
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const [mouseLat, setMouseLat] = useState(0);
   const [mouseLng, setMouseLng] = useState(0);
@@ -313,6 +314,7 @@ export default function MapPage() {
             {mapType === 'hybrid' && <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}" opacity={0.5} />}
             <ScaleControl position="bottomleft" metric={true} imperial={false} />
             {filteredFeatures() && <GeoJSON key={JSON.stringify(activeLayers) + typeFilter + statusFilter + revision} data={filteredFeatures()!} pointToLayer={pointToLayer as any}
+              ref={(r: any) => { if (r && !geoLayerRef.current) geoLayerRef.current = r; }}
               onEachFeature={(f: any, l: any) => { if (f.properties) l.on({
                 click: () => setSelectedFeature(f),
                 contextmenu: (e: any) => { e.originalEvent.preventDefault(); setCtxMenu({ x: e.originalEvent.clientX, y: e.originalEvent.clientY, lat: e.latlng.lat, lng: e.latlng.lng, feature: f }); },
@@ -411,6 +413,14 @@ export default function MapPage() {
                     if (!editCode.trim()) return;
                     const saveLat = dragPosRef.current?.lat ?? editLat;
                     const saveLng = dragPosRef.current?.lng ?? editLng;
+                    geoLayerRef.current?.eachLayer?.((layer: any) => {
+                      if (layer.feature?.properties?.id === editingFeature.id) {
+                        layer.setLatLng?.([saveLat, saveLng]);
+                        layer.feature.geometry.coordinates = [saveLng, saveLat];
+                        layer.feature.properties.code = editCode;
+                        layer.feature.properties.name = editName;
+                      }
+                    });
                     setGeoJSON((prev: any) => {
                       if (!prev) return prev;
                       return { ...prev, features: prev.features.map((f: any) =>
@@ -420,9 +430,7 @@ export default function MapPage() {
                     setRevision(r => r + 1);
                     dragPosRef.current = null;
                     setEditingFeature(null);
-                    api.assets.update(editingFeature.id, { code: editCode, name: editName, latitude: saveLat, longitude: saveLng }).catch(() =>
-                      mockApi.assets.update(editingFeature.id, { code: editCode, name: editName, latitude: saveLat, longitude: saveLng }).catch(() => {})
-                    );
+                    api.assets.update(editingFeature.id, { code: editCode, name: editName, latitude: saveLat, longitude: saveLng }).catch(() => {});
                   }} className="flex-1 px-3 py-2 bg-interplay-500 text-white rounded-xl text-xs font-semibold hover:bg-interplay-600">💾 Guardar</button>
                   <button onClick={() => setEditingFeature(null)} className="px-3 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-200">✕</button>
                   {!confirmDelete ? (
