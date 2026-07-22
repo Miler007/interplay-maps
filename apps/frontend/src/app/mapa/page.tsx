@@ -64,6 +64,11 @@ export default function MapPage() {
   const [locating, setLocating] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [panel, setPanel] = useState(true);
+  const [addingCaja, setAddingCaja] = useState(false);
+  const [addPos, setAddPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [newCode, setNewCode] = useState('');
+  const [newPorts, setNewPorts] = useState(16);
+  const [newFree, setNewFree] = useState(16);
   const mapRef = useRef<any>(null);
 
   const loadLayers = useCallback(async () => {
@@ -118,6 +123,35 @@ export default function MapPage() {
       <TileLayer url={tileUrl} attribution="" />
       {mapType === 'hybrid' && <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}" opacity={0.5} />}
       {geoJSON && <GeoJSON key={JSON.stringify(activeLayers)} data={geoJSON} pointToLayer={pointToLayer as any} onEachFeature={onEachFeature as any} />}
+      {addingCaja && <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 w-72">
+        <p className="text-xs font-semibold text-slate-500 uppercase mb-2">Agregar caja en ubicación</p>
+        <p className="text-xs text-slate-400 mb-3 font-mono">{addPos?.lat.toFixed(5)}, {addPos?.lng.toFixed(5)}</p>
+        <div className="space-y-2">
+          <input value={newCode} onChange={e => setNewCode(e.target.value)} placeholder="Código (ej: 16.1)" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-interplay-500" />
+          <div className="grid grid-cols-2 gap-2">
+            <select value={newPorts} onChange={e => setNewPorts(Number(e.target.value))} className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none">
+              <option value={8}>8 puertos</option><option value={16}>16 puertos</option>
+            </select>
+            <input type="number" min={0} max={newPorts} value={newFree} onChange={e => setNewFree(Math.min(Number(e.target.value), newPorts))} placeholder="Libres" className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none" />
+          </div>
+          <div className="flex gap-2">
+            <button onClick={async () => {
+              if (!newCode.trim() || !addPos) return;
+              try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                await api.assets.create({
+                  code: newCode, name: `CAJA ${newCode}`, assetTypeId: '8e3e137d-791b-43c3-8dc8-29fe15bda19d',
+                  departmentId: 'a84105b4-eda4-4246-8361-8678d41bd0e7', municipalityId: 'e4ff7e38-cd79-452c-a1d3-370d7080adb4',
+                  projectId: '068e3d5c-877c-4c51-b1d4-4dc16102aa35', latitude: addPos.lat, longitude: addPos.lng, status: 'ACTIVO',
+                });
+                await api.capacity?.update?.(newCode, { totalPorts: newPorts, freePorts: newFree, usedPorts: newPorts - newFree })?.catch?.() || null;
+                setAddingCaja(false); setNewCode(''); alert('✅ Caja agregada'); loadGeoJSON();
+              } catch { alert('Error'); }
+            }} className="flex-1 px-3 py-2 bg-emerald-500 text-white rounded-xl text-xs font-semibold hover:bg-emerald-600">✅ Agregar</button>
+            <button onClick={() => setAddingCaja(false)} className="px-3 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-200">✕</button>
+          </div>
+        </div>
+      </div>}
     </MapContainer>
   );
 
@@ -207,6 +241,10 @@ export default function MapPage() {
               <button onClick={locateMe} disabled={locating} className="flex items-center justify-center gap-1.5 flex-1 text-xs bg-slate-50 hover:bg-slate-100 rounded-xl px-3 py-2.5 text-slate-600 border border-slate-200 transition-all">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"/></svg>
                 {locating ? '...' : 'GPS'}
+              </button>
+              <button onClick={() => { if (!navigator.geolocation) return; navigator.geolocation.getCurrentPosition(p => { setAddPos({ lat: +p.coords.latitude.toFixed(5), lng: +p.coords.longitude.toFixed(5) }); setAddingCaja(true); }); }} className="flex items-center justify-center gap-1.5 flex-1 text-xs bg-emerald-50 hover:bg-emerald-100 rounded-xl px-3 py-2.5 text-emerald-600 border border-emerald-200 transition-all">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                + Caja
               </button>
               <button onClick={() => setFullscreen(true)} className="flex items-center justify-center flex-1 text-xs bg-slate-50 hover:bg-slate-100 rounded-xl px-3 py-2.5 text-slate-600 border border-slate-200 transition-all">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
