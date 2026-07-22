@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -8,7 +8,7 @@ import { api } from '@/lib/api';
 
 const MapContainer = dynamic(() => import('react-leaflet').then((m) => m.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then((m) => m.TileLayer), { ssr: false });
-const DraggableMarker = dynamic(() => import('@/components/map/DraggableMarker'), { ssr: false });
+const Marker = dynamic(() => import('react-leaflet').then((m) => m.Marker), { ssr: false });
 
 const S = {
   container: "max-w-2xl mx-auto space-y-4",
@@ -39,6 +39,11 @@ const Icons = {
   alert: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
 };
 
+function purpleIcon() {
+  if (typeof window === 'undefined') return undefined;
+  try { return (window as any).L.divIcon({ className: '', html: '<div style="width:28px;height:28px;background:#a855f7;border-radius:50%;border:3px solid rgba(255,255,255,.95);box-shadow:0 2px 16px rgba(168,85,247,.6),0 0 0 4px rgba(168,85,247,.2);cursor:grab"></div><div style="width:2px;height:16px;background:rgba(168,85,247,.4);margin:0 auto"></div>', iconSize: [28, 46], iconAnchor: [14, 46] }); }
+  catch { return undefined; }
+}
 function SvgIcon({ html, className }: { html: string; className?: string }) {
   return <span className={className} dangerouslySetInnerHTML={{ __html: html }} />;
 }
@@ -62,8 +67,6 @@ export default function FieldValidationPage() {
   const [showAddClient, setShowAddClient] = useState(false);
   const [newClient, setNewClient] = useState({ name: '', doc: '', addr: '' });
   const [isClient, setIsClient] = useState(false);
-  const markerRef = useRef<any>(null);
-  const dragPosRef = useRef<{lat: number; lng: number} | null>(null);
   useEffect(() => { setIsClient(true); }, []);
 
   useEffect(() => {
@@ -140,7 +143,9 @@ export default function FieldValidationPage() {
               <MapContainer center={[gps.lat, gps.lng]} zoom={19} className="h-full w-full" zoomControl={false} scrollWheelZoom={true}>
                 <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" attribution="" />
                 <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}" attribution="" opacity={0.5} />
-                <DraggableMarker lat={gps.lat} lng={gps.lng} markerRef={markerRef} onMove={(lat, lng) => { setGps({ lat, lng }); markerRef.current = markerRef.current; }} />
+                <Marker position={[gps.lat, gps.lng]} draggable={true} icon={purpleIcon()}
+                  eventHandlers={{ dragend: (e: any) => { const p = e.target.getLatLng(); setGps({ lat: +p.lat.toFixed(5), lng: +p.lng.toFixed(5) }); } }}
+                />
               </MapContainer>
             </div>}
             {!gps && asset.latitude && isClient && <div className="h-40 rounded-xl overflow-hidden border border-slate-200 opacity-60">
