@@ -10,7 +10,9 @@
   },
   "dependencies": {
     "@interplay/shared": "*",
+    "@types/leaflet-draw": "^1.0.13",
     "leaflet": "^1.9.4",
+    "leaflet-draw": "^1.0.4",
     "leaflet.markercluster": "^1.5.3",
     "next": "^14.2.0",
     "react": "^18.3.0",
