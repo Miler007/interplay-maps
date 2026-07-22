@@ -319,6 +319,12 @@ export default function MapPage() {
             {drawings.map((d: any, i: number) => d.type === 'line' ? <Polyline key={`d-${i}`} positions={d.positions} pathOptions={{ color: '#8b5cf6', weight: 4 }} /> : null)}
             {drawings.map((d: any, i: number) => d.type === 'polygon' ? <Polygon key={`dp-${i}`} positions={d.positions} pathOptions={{ color: '#3b82f6', fillOpacity: 0.15 }} /> : null)}
             {editingFeature && <Marker position={[editLat, editLng]} draggable={true}
+              icon={typeof window !== 'undefined' ? (window as any).L?.divIcon?.({
+                className: '',
+                html: '<div style="width:24px;height:24px;background:#a855f7;border-radius:50%;border:3px solid rgba(255,255,255,.9);box-shadow:0 2px 12px rgba(168,85,247,.5);cursor:grab"></div>',
+                iconSize: [24, 24],
+                iconAnchor: [12, 12],
+              }) : undefined}
               eventHandlers={{ dragend: (e: any) => { const p = e.target.getLatLng(); setEditLat(+p.lat.toFixed(5)); setEditLng(+p.lng.toFixed(5)); } }}
             />}
             <MapClickHandler onAddMode={addModeActive || activeTool === 'measure' || activeTool === 'add-marker' || activeTool === 'draw-line' || activeTool === 'draw-polygon'}
