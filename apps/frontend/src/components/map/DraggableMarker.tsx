@@ -3,7 +3,11 @@
 import { useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 
-export default function DraggableMarker({ lat, lng, onMove }: { lat: number; lng: number; onMove: (lat: number, lng: number) => void }) {
+export default function DraggableMarker({ lat, lng, onMove, markerRef }: {
+  lat: number; lng: number;
+  onMove: (lat: number, lng: number) => void;
+  markerRef: React.MutableRefObject<any>;
+}) {
   const map = useMap();
   const onMoveRef = useRef(onMove);
   onMoveRef.current = onMove;
@@ -14,6 +18,8 @@ export default function DraggableMarker({ lat, lng, onMove }: { lat: number; lng
 
     const marker = L.marker([lat, lng], {
       draggable: true,
+      autoPan: true,
+      autoPanSpeed: 20,
       zIndexOffset: 10000,
       icon: L.divIcon({
         className: '',
@@ -23,12 +29,17 @@ export default function DraggableMarker({ lat, lng, onMove }: { lat: number; lng
       }),
     }).addTo(map);
 
+    markerRef.current = marker;
+
     marker.on('dragend', (e: any) => {
       const p = e.target.getLatLng();
-      onMoveRef.current(+p.lat.toFixed(5), +p.lng.toFixed(5));
+      const latVal = +p.lat.toFixed(5);
+      const lngVal = +p.lng.toFixed(5);
+      markerRef.current = marker;
+      onMoveRef.current(latVal, lngVal);
     });
 
-    return () => { marker.remove(); };
+    return () => { marker.remove(); markerRef.current = null; };
   }, [map]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return null;
