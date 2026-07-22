@@ -5,7 +5,8 @@ import { useMap } from 'react-leaflet';
 
 export default function DraggableMarker({ lat, lng, onMove }: { lat: number; lng: number; onMove: (lat: number, lng: number) => void }) {
   const map = useMap();
-  const markerRef = useRef<any>(null);
+  const onMoveRef = useRef(onMove);
+  onMoveRef.current = onMove;
 
   useEffect(() => {
     const L = (window as any).L;
@@ -22,20 +23,13 @@ export default function DraggableMarker({ lat, lng, onMove }: { lat: number; lng
       }),
     }).addTo(map);
 
-    marker.on('drag', (e: any) => {
-      const p = e.target.getLatLng();
-      onMove(+p.lat.toFixed(5), +p.lng.toFixed(5));
-    });
-
     marker.on('dragend', (e: any) => {
       const p = e.target.getLatLng();
-      onMove(+p.lat.toFixed(5), +p.lng.toFixed(5));
+      onMoveRef.current(+p.lat.toFixed(5), +p.lng.toFixed(5));
     });
 
-    markerRef.current = marker;
-
     return () => { marker.remove(); };
-  }, [lat, lng]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [map]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return null;
 }
