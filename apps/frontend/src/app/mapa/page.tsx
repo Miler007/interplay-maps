@@ -332,7 +332,7 @@ export default function MapPage() {
           {selectedFeature && !editingFeature && (() => {
             const p = selectedFeature.properties; const g = selectedFeature.geometry;
             const color = COLORS[p.type] || '#64748b';
-            return <div className="absolute top-3 right-3 z-10 w-72 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden">
+            return <div className="absolute top-3 right-3 z-[1000] w-72 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden">
               <div className="p-4">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex gap-1.5 flex-wrap">
@@ -377,7 +377,7 @@ export default function MapPage() {
           })()}
 
           {/* Edit Form */}
-          {editingFeature && <div className="absolute top-3 right-3 z-10 w-80 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden">
+          {editingFeature && <div className="absolute top-3 right-3 z-[1000] w-80 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden">
             <div className="p-4">
               <p className="text-xs font-semibold text-slate-500 uppercase mb-3">✏️ Editar {editingFeature.type}</p>
               <div className="space-y-2.5 text-xs">
@@ -424,7 +424,7 @@ export default function MapPage() {
           </div>}
 
           {/* Add Form */}
-          {addPos && addingCaja && <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-20 w-80 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden">
+          {addPos && addingCaja && <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-[1000] w-80 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden">
             <div className="p-4">
               <p className="text-xs font-semibold text-slate-500 uppercase mb-3">➕ Nuevo activo</p>
               <div className="space-y-2.5 text-xs">
@@ -476,18 +476,18 @@ export default function MapPage() {
           </div>}
 
           {/* Add mode hint */}
-          {addModeActive && !addingCaja && <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-20 bg-interplay-500 text-white text-xs px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+          {addModeActive && !addingCaja && <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-[1000] bg-interplay-500 text-white text-xs px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
             <div className="animate-pulse w-2 h-2 bg-white rounded-full" />
             Haz clic en el mapa para colocar el activo
           </div>}
 
           {/* Toolbar */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000]">
             <PremiumToolbar activeTool={activeTool} onToolChange={setActiveTool} onClearAll={clearDrawings} distance={activeTool === 'measure' ? distStr : undefined} />
           </div>
 
           {/* Status bar */}
-          <div className="absolute bottom-4 right-4 z-20">
+          <div className="absolute bottom-4 right-4 z-[1000]">
             <StatusBar lat={mouseLat} lng={mouseLng} zoom={zoomLevel} count={filteredFeatures()?.features?.length || 0}
               layerName={activeLayers.size === 1 ? layers.find(l => l.id === Array.from(activeLayers)[0])?.name : undefined}
               isOffline={isOffline} isClient={isClient}
@@ -497,8 +497,8 @@ export default function MapPage() {
 
           {/* Context Menu */}
           {ctxMenu && <>
-            <div className="fixed inset-0 z-30" onClick={() => setCtxMenu(null)} onContextMenu={(e) => { e.preventDefault(); setCtxMenu(null); }} />
-            <div className="fixed z-40 bg-white rounded-2xl shadow-2xl border border-slate-200 py-1.5 w-52" style={{ left: ctxMenu.x, top: ctxMenu.y }}>
+            <div className="fixed inset-0 z-[1001]" onClick={() => setCtxMenu(null)} onContextMenu={(e) => { e.preventDefault(); setCtxMenu(null); }} />
+            <div className="fixed z-[1002] bg-white rounded-2xl shadow-2xl border border-slate-200 py-1.5 w-52" style={{ left: ctxMenu.x, top: ctxMenu.y }}>
               {ctxMenu.feature ? <>
                 <button className="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-all" onClick={() => {
                   const p = ctxMenu.feature.properties; const g = ctxMenu.feature.geometry;
