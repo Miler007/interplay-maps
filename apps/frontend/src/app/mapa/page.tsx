@@ -42,7 +42,8 @@ function featureToPopup(feature: any) {
     <div style="margin-top:6px;display:flex;gap:6px;font-size:11px">
       <span style="background:#f1f5f9;padding:3px 6px;border-radius:6px;flex:1;text-align:center">Confianza <strong style="color:#0f172a">${p.confidenceScore || 0}%</strong></span>
       <span style="background:#f1f5f9;padding:3px 6px;border-radius:6px;flex:1;text-align:center">Salud <strong style="color:#0f172a">${p.healthScore || 0}%</strong></span>
-    </div></div>`;
+    </div>
+    <button class="edit-asset-btn" data-id="${p.id}" data-code="${p.code}" data-name="${p.name}" data-type="${p.type}" data-lat="${feature.geometry.coordinates[1]}" data-lng="${feature.geometry.coordinates[0]}" style="margin-top:8px;width:100%;padding:5px 0;background:#f1f5f9;border:none;border-radius:8px;font-size:11px;font-weight:600;color:#0f172a;cursor:pointer">✏️ Editar</button></div>`;
 }
 
 function pointToLayer(feature: any, latlng: L.LatLng) {
@@ -72,6 +73,9 @@ export default function MapPage() {
   const [newCode, setNewCode] = useState('');
   const [newPorts, setNewPorts] = useState(16);
   const [newFree, setNewFree] = useState(16);
+  const [editingFeature, setEditingFeature] = useState<{ id: string; code: string; name: string; type: string; lat: number; lng: number } | null>(null);
+  const [editCode, setEditCode] = useState('');
+  const [editName, setEditName] = useState('');
   const mapRef = useRef<any>(null);
 
   const [isOffline, setIsOffline] = useState(false);
@@ -184,7 +188,28 @@ export default function MapPage() {
         Haz clic en el mapa para colocar la caja
       </div>}
 
-      <MapClickHandler onAddMode={addModeActive} onMapClick={(pos) => { setAddPos(pos); setAddingCaja(true); setAddModeActive(false); }} />
+      {editingFeature && <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 w-72">
+        <p className="text-xs font-semibold text-slate-500 uppercase mb-2">✏️ Editar {editingFeature.type}</p>
+        <p className="text-xs text-slate-400 mb-3 font-mono">{editingFeature.lat.toFixed(5)}, {editingFeature.lng.toFixed(5)}</p>
+        <div className="space-y-2">
+          <input value={editCode} onChange={e => setEditCode(e.target.value)} placeholder="Código" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-interplay-500" />
+          <input value={editName} onChange={e => setEditName(e.target.value)} placeholder="Nombre" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-interplay-500" />
+          <div className="flex gap-2">
+            <button onClick={async () => {
+              if (!editCode.trim()) return;
+              try {
+                await api.assets.update(editingFeature.id, { code: editCode, name: editName || `CAJA ${editCode}` });
+              } catch {
+                try { await mockApi.assets.create({ code: editCode, name: editName || `CAJA ${editCode}`, latitude: editingFeature.lat, longitude: editingFeature.lng, status: 'ACTIVO' }); } catch {}
+              }
+              setEditingFeature(null); alert('✅ Actualizado'); loadGeoJSON();
+            }} className="flex-1 px-3 py-2 bg-interplay-500 text-white rounded-xl text-xs font-semibold hover:bg-interplay-600">💾 Guardar</button>
+            <button onClick={() => setEditingFeature(null)} className="px-3 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-200">✕</button>
+          </div>
+        </div>
+      </div>}
+
+      <MapClickHandler onAddMode={addModeActive} onMapClick={(pos) => { setAddPos(pos); setAddingCaja(true); setAddModeActive(false); }} onEditAsset={(asset) => { setEditingFeature(asset); setEditCode(asset.code); setEditName(asset.name); }} />
     </MapContainer>
   );
 
