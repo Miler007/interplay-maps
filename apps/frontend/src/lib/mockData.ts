@@ -133,6 +133,8 @@ export const mockApi = {
       return Promise.resolve({ data: items });
     },
     create: (data: any) => Promise.resolve({ id: 'mock-' + Date.now(), ...data }),
+    update: (id: string, data: any) => Promise.resolve({ id, ...data }),
+    delete: (id: string) => Promise.resolve({ success: true }),
   },
   capacity: {
     update: (code: string, data: any) => Promise.resolve({ code, ...data }),

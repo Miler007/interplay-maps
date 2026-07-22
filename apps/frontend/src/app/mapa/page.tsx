@@ -10,6 +10,7 @@ const MapContainer = dynamic(() => import('react-leaflet').then((m) => m.MapCont
 const TileLayer = dynamic(() => import('react-leaflet').then((m) => m.TileLayer), { ssr: false });
 const GeoJSON = dynamic(() => import('react-leaflet').then((m) => m.GeoJSON), { ssr: false });
 const ZoomControl = dynamic(() => import('react-leaflet').then((m) => m.ZoomControl), { ssr: false });
+const Marker = dynamic(() => import('react-leaflet').then((m) => m.Marker), { ssr: false });
 const MapClickHandler = dynamic(() => import('@/components/map/MapClickHandler'), { ssr: false });
 
 const iconColors: Record<string, string> = {
@@ -76,6 +77,9 @@ export default function MapPage() {
   const [editingFeature, setEditingFeature] = useState<{ id: string; code: string; name: string; type: string; lat: number; lng: number } | null>(null);
   const [editCode, setEditCode] = useState('');
   const [editName, setEditName] = useState('');
+  const [editLat, setEditLat] = useState(0);
+  const [editLng, setEditLng] = useState(0);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const mapRef = useRef<any>(null);
 
   const [isOffline, setIsOffline] = useState(false);
@@ -188,28 +192,64 @@ export default function MapPage() {
         Haz clic en el mapa para colocar la caja
       </div>}
 
-      {editingFeature && <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 w-72">
+      {editingFeature && <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 w-80">
         <p className="text-xs font-semibold text-slate-500 uppercase mb-2">✏️ Editar {editingFeature.type}</p>
-        <p className="text-xs text-slate-400 mb-3 font-mono">{editingFeature.lat.toFixed(5)}, {editingFeature.lng.toFixed(5)}</p>
-        <div className="space-y-2">
-          <input value={editCode} onChange={e => setEditCode(e.target.value)} placeholder="Código" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-interplay-500" />
-          <input value={editName} onChange={e => setEditName(e.target.value)} placeholder="Nombre" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-interplay-500" />
-          <div className="flex gap-2">
+        <div className="space-y-2 text-xs">
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-slate-400 text-[10px] font-semibold uppercase">Código</label>
+              <input value={editCode} onChange={e => setEditCode(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-interplay-500 mt-1" />
+            </div>
+            <div>
+              <label className="text-slate-400 text-[10px] font-semibold uppercase">Nombre</label>
+              <input value={editName} onChange={e => setEditName(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-interplay-500 mt-1" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-slate-400 text-[10px] font-semibold uppercase">Latitud</label>
+              <input type="number" step="0.00001" value={editLat} onChange={e => setEditLat(parseFloat(e.target.value) || 0)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-interplay-500 mt-1" />
+            </div>
+            <div>
+              <label className="text-slate-400 text-[10px] font-semibold uppercase">Longitud</label>
+              <input type="number" step="0.00001" value={editLng} onChange={e => setEditLng(parseFloat(e.target.value) || 0)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-interplay-500 mt-1" />
+            </div>
+          </div>
+          <p className="text-[10px] text-slate-400 italic">Arrastra el marcador 🟣 en el mapa o edita las coordenadas</p>
+          <div className="flex gap-2 pt-1">
             <button onClick={async () => {
               if (!editCode.trim()) return;
-              try {
-                await api.assets.update(editingFeature.id, { code: editCode, name: editName || `CAJA ${editCode}` });
-              } catch {
-                try { await mockApi.assets.create({ code: editCode, name: editName || `CAJA ${editCode}`, latitude: editingFeature.lat, longitude: editingFeature.lng, status: 'ACTIVO' }); } catch {}
-              }
+              try { await api.assets.update(editingFeature.id, { code: editCode, name: editName, latitude: editLat, longitude: editLng }); }
+              catch { try { await mockApi.assets.update(editingFeature.id, { code: editCode, name: editName, latitude: editLat, longitude: editLng }); } catch {} }
               setEditingFeature(null); alert('✅ Actualizado'); loadGeoJSON();
             }} className="flex-1 px-3 py-2 bg-interplay-500 text-white rounded-xl text-xs font-semibold hover:bg-interplay-600">💾 Guardar</button>
             <button onClick={() => setEditingFeature(null)} className="px-3 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-200">✕</button>
+            {!confirmDelete ? (
+              <button onClick={() => setConfirmDelete(true)} className="px-3 py-2 bg-red-50 text-red-500 rounded-xl text-xs font-semibold hover:bg-red-100 border border-red-200">🗑️</button>
+            ) : (
+              <button onClick={async () => {
+                try { await api.assets.delete(editingFeature.id); }
+                catch { try { await mockApi.assets.delete(editingFeature.id); } catch {} }
+                setEditingFeature(null); setConfirmDelete(false); alert('🗑️ Eliminado'); loadGeoJSON();
+              }} className="px-3 py-2 bg-red-500 text-white rounded-xl text-xs font-semibold hover:bg-red-600">Confirmar</button>
+            )}
           </div>
         </div>
       </div>}
 
-      <MapClickHandler onAddMode={addModeActive} onMapClick={(pos) => { setAddPos(pos); setAddingCaja(true); setAddModeActive(false); }} onEditAsset={(asset) => { setEditingFeature(asset); setEditCode(asset.code); setEditName(asset.name); }} />
+      {editingFeature && <Marker
+        position={[editLat, editLng]}
+        draggable={true}
+        eventHandlers={{
+          dragend: (e: any) => {
+            const pos = e.target.getLatLng();
+            setEditLat(+pos.lat.toFixed(5));
+            setEditLng(+pos.lng.toFixed(5));
+          },
+        }}
+      />}
+
+      <MapClickHandler onAddMode={addModeActive} onMapClick={(pos) => { setAddPos(pos); setAddingCaja(true); setAddModeActive(false); }} onEditAsset={(asset) => { setEditingFeature(asset); setEditCode(asset.code); setEditName(asset.name); setEditLat(asset.lat); setEditLng(asset.lng); setConfirmDelete(false); }} />
     </MapContainer>
   );
 
