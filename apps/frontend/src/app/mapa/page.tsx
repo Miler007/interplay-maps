@@ -192,11 +192,120 @@ export default function MapPage() {
     <div className="flex h-dvh bg-slate-900">
       <Sidebar />
       <main className="flex-1 min-w-0 flex flex-col">
-        <div className="flex-1 min-h-0 relative">
+        <div className="flex-1 min-h-0 flex">
           {!isClient && <div className="absolute inset-0 flex items-center justify-center bg-slate-900 z-50">
             <div className="animate-spin w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full" />
           </div>}
 
+          {/* Side Panel - no overlap, pushes map */}
+          <div className="w-72 shrink-0 bg-white/95 backdrop-blur-xl border-r border-slate-200/80 overflow-y-auto">
+            <div className="p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  Interplay Maps
+                </h2>
+              </div>
+
+              <div>
+                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Tipo de mapa</p>
+                <div className="grid grid-cols-2 gap-1">
+                  {MAP_TYPES.map(({ key, label, icon }) => (
+                    <button key={key} onClick={() => setMapType(key)}
+                      className={`flex items-center gap-1.5 px-2.5 py-2 text-[11px] rounded-xl transition-all ${mapType === key ? 'bg-slate-900 text-white shadow-sm' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
+                      <span dangerouslySetInnerHTML={{ __html: icon }} /> {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Buscar activo</p>
+                <div className="flex gap-1">
+                  <input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && searchCaja()}
+                    placeholder="Código o nombre..." className="flex-1 text-[11px] bg-slate-50 rounded-xl px-3 py-2 outline-none text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-interplay-500" />
+                  <button onClick={searchCaja} className="px-2.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition-all">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  </button>
+                </div>
+                {searchResults.length > 0 && <div className="mt-1.5 max-h-32 overflow-y-auto border border-slate-100 rounded-xl bg-white">
+                  {searchResults.map((r: any) => (
+                    <button key={r.id} onClick={() => { mapRef.current?.flyTo([r.latitude, r.longitude], 18); setSearchResults([]); }}
+                      className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-slate-50 text-[11px] text-slate-700 border-b border-slate-50 last:border-0">
+                      <span style={{ background: COLORS[r.assetType?.code] || '#64748b' }} className="w-2 h-2 rounded-full shrink-0" />
+                      <strong>{r.code}</strong>
+                      <span className="truncate text-slate-400">{r.name}</span>
+                    </button>
+                  ))}
+                </div>}
+              </div>
+
+              <div>
+                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Filtros</p>
+                <div className="flex flex-wrap gap-1">
+                  {ASSET_TYPES.map(t => (
+                    <button key={t.code} onClick={() => setTypeFilter(typeFilter === t.code ? null : t.code)}
+                      className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all ${typeFilter === t.code ? 'text-white border-transparent' : 'text-slate-500 border-slate-200 hover:border-slate-300'}`}
+                      style={typeFilter === t.code ? { background: t.color, borderColor: t.color } : {}}>
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+                {typeFilter && <button onClick={() => setTypeFilter(null)} className="text-[10px] text-slate-400 hover:text-slate-600 mt-1">✕ Limpiar filtro</button>}
+                <div className="flex gap-1 mt-2">
+                  {STATUSES.map(s => (
+                    <button key={s} onClick={() => setStatusFilter(statusFilter === s ? null : s)}
+                      className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all ${statusFilter === s ? 'bg-slate-900 text-white border-slate-900' : 'text-slate-500 border-slate-200 hover:border-slate-300'}`}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Capas ({layers.length})</p>
+                {layers.length === 0 && <p className="text-xs text-slate-400">Sin capas</p>}
+                {layers.map((l: any) => (
+                  <label key={l.id} className="flex items-center gap-2.5 py-1.5 cursor-pointer group">
+                    <div onClick={() => toggleLayer(l.id)} className={`w-4 h-4 rounded-md border-2 transition-all flex items-center justify-center ${activeLayers.has(l.id) ? 'bg-interplay-500 border-interplay-500' : 'border-slate-300 group-hover:border-slate-400'}`}>
+                      {activeLayers.has(l.id) && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
+                    </div>
+                    <span className="text-xs text-slate-600 truncate">{l.name}</span>
+                  </label>
+                ))}
+              </div>
+
+              <div>
+                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Leyenda</p>
+                <div className="grid grid-cols-2 gap-1">
+                  {ASSET_TYPES.map(({ code, label, color }) => (
+                    <div key={code} className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: color }} />
+                      <span className="text-[11px] text-slate-500">{label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-1.5 pt-1">
+                <button onClick={locateMe} disabled={locating} className="flex items-center justify-center gap-1.5 text-[11px] bg-slate-50 hover:bg-slate-100 rounded-xl px-3 py-2 text-slate-600 border border-slate-200 transition-all">
+                  📍 {locating ? '...' : 'GPS'}
+                </button>
+                <button onClick={() => { if (addModeActive) { setAddModeActive(false); return; } setAddModeActive(true); setAddingCaja(false); setAddPos(null); }}
+                  className={`flex items-center justify-center gap-1.5 text-[11px] rounded-xl px-3 py-2 border transition-all ${addModeActive ? 'bg-interplay-500 text-white border-interplay-500' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border-emerald-200'}`}>
+                  {addModeActive ? '✕' : '+ Activo'}
+                </button>
+                <button onClick={() => mapRef.current?.zoomIn()} className="flex items-center justify-center gap-1.5 text-[11px] bg-slate-50 hover:bg-slate-100 rounded-xl px-3 py-2 text-slate-600 border border-slate-200 transition-all">
+                  🔍 Acercar
+                </button>
+                <button onClick={() => mapRef.current?.flyTo([5.15, -75.04], 15)} className="flex items-center justify-center gap-1.5 text-[11px] bg-slate-50 hover:bg-slate-100 rounded-xl px-3 py-2 text-slate-600 border border-slate-200 transition-all">
+                  🏠 Fresno
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-1 min-w-0 relative">
           {isClient && <MapContainer ref={mapRef} center={[5.15, -75.04]} zoom={15} maxZoom={19} className="h-full w-full" zoomControl={false}>
             <TileLayer url={tileUrl} attribution="" />
             {mapType === 'hybrid' && <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}" opacity={0.5} />}
@@ -220,120 +329,6 @@ export default function MapPage() {
               onMapClick={handleMapClick} onContextMenu={handleContextMenu} onMouseMove={handleMouseMove} onZoomChange={setZoomLevel}
             />
           </MapContainer>}
-
-          {/* Side Panel - always visible */}
-          <div className="absolute top-3 left-3 z-10 w-72 max-h-[calc(100dvh-10rem)] bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/80 overflow-y-auto">
-            <div className="p-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  Interplay Maps
-                </h2>
-              </div>
-
-              {/* Map Type */}
-              <div>
-                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Tipo de mapa</p>
-                <div className="grid grid-cols-2 gap-1">
-                  {MAP_TYPES.map(({ key, label, icon }) => (
-                    <button key={key} onClick={() => setMapType(key)}
-                      className={`flex items-center gap-1.5 px-2.5 py-2 text-[11px] rounded-xl transition-all ${mapType === key ? 'bg-slate-900 text-white shadow-sm' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
-                      <span dangerouslySetInnerHTML={{ __html: icon }} /> {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Search */}
-              <div>
-                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Buscar activo</p>
-                <div className="flex gap-1">
-                  <input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && searchCaja()}
-                    placeholder="Código o nombre..." className="flex-1 text-[11px] bg-slate-50 rounded-xl px-3 py-2 outline-none text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-interplay-500" />
-                  <button onClick={searchCaja} className="px-2.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition-all">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                  </button>
-                </div>
-                {searchResults.length > 0 && <div className="mt-1.5 max-h-32 overflow-y-auto border border-slate-100 rounded-xl bg-white">
-                  {searchResults.map((r: any) => (
-                    <button key={r.id} onClick={() => { mapRef.current?.flyTo([r.latitude, r.longitude], 18); setSearchResults([]); }}
-                      className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-slate-50 text-[11px] text-slate-700 border-b border-slate-50 last:border-0">
-                      <span style={{ background: COLORS[r.assetType?.code] || '#64748b' }} className="w-2 h-2 rounded-full shrink-0" />
-                      <strong>{r.code}</strong>
-                      <span className="truncate text-slate-400">{r.name}</span>
-                    </button>
-                  ))}
-                </div>}
-              </div>
-
-              {/* Filters */}
-              <div>
-                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Filtros</p>
-                <div className="flex flex-wrap gap-1">
-                  {ASSET_TYPES.map(t => (
-                    <button key={t.code} onClick={() => setTypeFilter(typeFilter === t.code ? null : t.code)}
-                      className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all ${typeFilter === t.code ? 'text-white border-transparent' : 'text-slate-500 border-slate-200 hover:border-slate-300'}`}
-                      style={typeFilter === t.code ? { background: t.color, borderColor: t.color } : {}}>
-                      {t.label}
-                    </button>
-                  ))}
-                </div>
-                {typeFilter && <button onClick={() => setTypeFilter(null)} className="text-[10px] text-slate-400 hover:text-slate-600 mt-1">✕ Limpiar filtro</button>}
-                <div className="flex gap-1 mt-2">
-                  {STATUSES.map(s => (
-                    <button key={s} onClick={() => setStatusFilter(statusFilter === s ? null : s)}
-                      className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all ${statusFilter === s ? 'bg-slate-900 text-white border-slate-900' : 'text-slate-500 border-slate-200 hover:border-slate-300'}`}>
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Layers */}
-              <div>
-                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Capas ({layers.length})</p>
-                {layers.length === 0 && <p className="text-xs text-slate-400">Sin capas</p>}
-                {layers.map((l: any) => (
-                  <label key={l.id} className="flex items-center gap-2.5 py-1.5 cursor-pointer group">
-                    <div onClick={() => toggleLayer(l.id)} className={`w-4 h-4 rounded-md border-2 transition-all flex items-center justify-center ${activeLayers.has(l.id) ? 'bg-interplay-500 border-interplay-500' : 'border-slate-300 group-hover:border-slate-400'}`}>
-                      {activeLayers.has(l.id) && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
-                    </div>
-                    <span className="text-xs text-slate-600 truncate">{l.name}</span>
-                  </label>
-                ))}
-              </div>
-
-              {/* Legend */}
-              <div>
-                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Leyenda</p>
-                <div className="grid grid-cols-2 gap-1">
-                  {ASSET_TYPES.map(({ code, label, color }) => (
-                    <div key={code} className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: color }} />
-                      <span className="text-[11px] text-slate-500">{label}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="grid grid-cols-2 gap-1.5 pt-1">
-                <button onClick={locateMe} disabled={locating} className="flex items-center justify-center gap-1.5 text-[11px] bg-slate-50 hover:bg-slate-100 rounded-xl px-3 py-2 text-slate-600 border border-slate-200 transition-all">
-                  📍 {locating ? '...' : 'GPS'}
-                </button>
-                <button onClick={() => { if (addModeActive) { setAddModeActive(false); return; } setAddModeActive(true); setAddingCaja(false); setAddPos(null); }}
-                  className={`flex items-center justify-center gap-1.5 text-[11px] rounded-xl px-3 py-2 border transition-all ${addModeActive ? 'bg-interplay-500 text-white border-interplay-500' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border-emerald-200'}`}>
-                  {addModeActive ? '✕' : '+ Activo'}
-                </button>
-                <button onClick={() => mapRef.current?.zoomIn()} className="flex items-center justify-center gap-1.5 text-[11px] bg-slate-50 hover:bg-slate-100 rounded-xl px-3 py-2 text-slate-600 border border-slate-200 transition-all">
-                  🔍 Acercar
-                </button>
-                <button onClick={() => mapRef.current?.flyTo([5.15, -75.04], 15)} className="flex items-center justify-center gap-1.5 text-[11px] bg-slate-50 hover:bg-slate-100 rounded-xl px-3 py-2 text-slate-600 border border-slate-200 transition-all">
-                  🏠 Fresno
-                </button>
-              </div>
-            </div>
-          </div>
 
 
 
@@ -537,6 +532,7 @@ export default function MapPage() {
               </button>
             </div>
           </>}
+        </div>
         </div>
       </main>
     </div>
