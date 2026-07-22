@@ -62,6 +62,7 @@ export default function MapPage() {
   const [mapType, setMapType] = useState('satellite');
   const [isClient, setIsClient] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
+  const [revision, setRevision] = useState(0);
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [locating, setLocating] = useState(false);
@@ -109,6 +110,7 @@ export default function MapPage() {
       if (layerId) p.layerId = layerId;
       const d = await api.gis.getGeoJSON(p);
       setGeoJSON(d);
+      setRevision(r => r + 1);
     } catch {
       try {
         const layerId = activeLayers.size === 1 ? Array.from(activeLayers)[0] : undefined;
@@ -117,6 +119,7 @@ export default function MapPage() {
         const d = await mockApi.gis.getGeoJSON(p);
         setGeoJSON(d);
         setIsOffline(true);
+        setRevision(r => r + 1);
       } catch {}
     }
   }, [activeLayers]);
@@ -308,7 +311,7 @@ export default function MapPage() {
             <TileLayer url={tileUrl} attribution="" />
             {mapType === 'hybrid' && <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}" opacity={0.5} />}
             <ScaleControl position="bottomleft" metric={true} imperial={false} />
-            {filteredFeatures() && <GeoJSON key={JSON.stringify(activeLayers) + typeFilter + statusFilter} data={filteredFeatures()!} pointToLayer={pointToLayer as any}
+            {filteredFeatures() && <GeoJSON key={JSON.stringify(activeLayers) + typeFilter + statusFilter + revision} data={filteredFeatures()!} pointToLayer={pointToLayer as any}
               onEachFeature={(f: any, l: any) => { if (f.properties) l.on({
                 click: () => setSelectedFeature(f),
                 contextmenu: (e: any) => { e.originalEvent.preventDefault(); setCtxMenu({ x: e.originalEvent.clientX, y: e.originalEvent.clientY, lat: e.latlng.lat, lng: e.latlng.lng, feature: f }); },
