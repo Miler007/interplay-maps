@@ -407,14 +407,10 @@ export default function MapPage() {
                 </div>
                 <p className="text-[10px] text-slate-400 italic">Arrastra el marcador 🟣 en el mapa o edita las coordenadas</p>
                 <div className="flex gap-2 pt-1">
-                  <button onClick={async () => {
+                  <button onClick={() => {
                     if (!editCode.trim()) return;
                     const saveLat = dragPosRef.current?.lat ?? editLat;
                     const saveLng = dragPosRef.current?.lng ?? editLng;
-                    try { await api.assets.update(editingFeature.id, { code: editCode, name: editName, latitude: saveLat, longitude: saveLng }); }
-                    catch {
-                      try { await mockApi.assets.update(editingFeature.id, { code: editCode, name: editName, latitude: saveLat, longitude: saveLng }); } catch {}
-                    }
                     setGeoJSON((prev: any) => {
                       if (!prev) return prev;
                       return { ...prev, features: prev.features.map((f: any) =>
@@ -424,6 +420,9 @@ export default function MapPage() {
                     setRevision(r => r + 1);
                     dragPosRef.current = null;
                     setEditingFeature(null);
+                    api.assets.update(editingFeature.id, { code: editCode, name: editName, latitude: saveLat, longitude: saveLng }).catch(() =>
+                      mockApi.assets.update(editingFeature.id, { code: editCode, name: editName, latitude: saveLat, longitude: saveLng }).catch(() => {})
+                    );
                   }} className="flex-1 px-3 py-2 bg-interplay-500 text-white rounded-xl text-xs font-semibold hover:bg-interplay-600">💾 Guardar</button>
                   <button onClick={() => setEditingFeature(null)} className="px-3 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-200">✕</button>
                   {!confirmDelete ? (
