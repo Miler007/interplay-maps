@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { api } from '@/lib/api';
+import { mockApi } from '@/lib/mockData';
 
 const MapContainer = dynamic(() => import('react-leaflet').then((m) => m.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then((m) => m.TileLayer), { ssr: false });
@@ -79,7 +80,14 @@ export default function MapView() {
       const data = await api.layers.getAll();
       setLayers(data);
       if (data.length > 0) setActiveLayers(new Set([data[0].id]));
-    } catch {}
+    } catch {
+      try {
+        const data = await mockApi.layers.getAll();
+        setLayers(data);
+        setIsOffline(true);
+        if (data.length > 0) setActiveLayers(new Set([data[0].id]));
+      } catch {}
+    }
   }, []);
 
   const loadGeoJSON = useCallback(async () => {
@@ -89,7 +97,16 @@ export default function MapView() {
       if (layerId) params.layerId = layerId;
       const data = await api.gis.getGeoJSON(params);
       setGeoJSON(data);
-    } catch {}
+    } catch {
+      try {
+        const layerId = activeLayers.size === 1 ? Array.from(activeLayers)[0] : undefined;
+        const params: Record<string, string> = {};
+        if (layerId) params.layerId = layerId;
+        const data = await mockApi.gis.getGeoJSON(params);
+        setGeoJSON(data);
+        setIsOffline(true);
+      } catch {}
+    }
   }, [activeLayers]);
 
   useEffect(() => { setIsClient(true); loadLayers(); }, [loadLayers]);
@@ -98,6 +115,8 @@ export default function MapView() {
   const toggleLayer = (layerId: string) => {
     setActiveLayers((prev) => { const next = new Set(prev); if (next.has(layerId)) next.delete(layerId); else next.add(layerId); return next; });
   };
+
+  const [isOffline, setIsOffline] = useState(false);
 
   const locateMe = () => {
     if (!navigator.geolocation) return;
@@ -118,7 +137,17 @@ export default function MapView() {
       if (list.length > 0 && list[0].latitude) {
         mapRef.current?.flyTo([list[0].latitude, list[0].longitude], 18);
       }
-    } catch {}
+    } catch {
+      try {
+        const r = await mockApi.assets.getAll({ search: query });
+        const items = r.data || r;
+        const list = Array.isArray(items) ? items.slice(0, 10) : [];
+        setSearchResults(list);
+        if (list.length > 0 && list[0].latitude) {
+          mapRef.current?.flyTo([list[0].latitude, list[0].longitude], 18);
+        }
+      } catch {}
+    }
   };
 
   if (!isClient) {
@@ -141,6 +170,11 @@ export default function MapView() {
           <GeoJSON key={JSON.stringify(activeLayers)} data={geoJSON} pointToLayer={pointToLayer as any} onEachFeature={onEachFeature as any} />
         )}
       </MapContainer>
+
+      {isOffline && <div className="absolute top-2 left-2 z-20 bg-amber-50 border border-amber-200 text-amber-700 text-[11px] px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1.5">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 6a6 6 0 0 1 6 6"/><path d="M12 10a2 2 0 0 1 2 2"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+        Demo
+      </div>}
 
       <div className="absolute top-2 right-2 z-10 flex flex-col gap-1.5">
         <div className="bg-white/95 backdrop-blur rounded-lg shadow-lg p-1.5 flex gap-1">

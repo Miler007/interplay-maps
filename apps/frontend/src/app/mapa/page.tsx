@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import Sidebar from '@/components/layout/Sidebar';
 import { api } from '@/lib/api';
+import { mockApi } from '@/lib/mockData';
 
 const MapContainer = dynamic(() => import('react-leaflet').then((m) => m.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then((m) => m.TileLayer), { ssr: false });
@@ -71,8 +72,11 @@ export default function MapPage() {
   const [newFree, setNewFree] = useState(16);
   const mapRef = useRef<any>(null);
 
+  const [isOffline, setIsOffline] = useState(false);
+
   const loadLayers = useCallback(async () => {
-    try { const d = await api.layers.getAll(); setLayers(d); if (d.length > 0) setActiveLayers(new Set([d[0].id])); } catch {}
+    try { const d = await api.layers.getAll(); setLayers(d); if (d.length > 0) setActiveLayers(new Set([d[0].id])); }
+    catch { try { const d = await mockApi.layers.getAll(); setLayers(d); setIsOffline(true); if (d.length > 0) setActiveLayers(new Set([d[0].id])); } catch {} }
   }, []);
 
   const loadGeoJSON = useCallback(async () => {
@@ -82,7 +86,16 @@ export default function MapPage() {
       if (layerId) p.layerId = layerId;
       const d = await api.gis.getGeoJSON(p);
       setGeoJSON(d);
-    } catch {}
+    } catch {
+      try {
+        const layerId = activeLayers.size === 1 ? Array.from(activeLayers)[0] : undefined;
+        const p: Record<string, string> = {};
+        if (layerId) p.layerId = layerId;
+        const d = await mockApi.gis.getGeoJSON(p);
+        setGeoJSON(d);
+        setIsOffline(true);
+      } catch {}
+    }
   }, [activeLayers]);
 
   useEffect(() => { setIsClient(true); loadLayers(); }, [loadLayers]);
@@ -109,7 +122,15 @@ export default function MapPage() {
       const list = Array.isArray(items) ? items.slice(0, 10) : [];
       setSearchResults(list);
       if (list.length > 0 && list[0].latitude) mapRef.current?.flyTo([list[0].latitude, list[0].longitude], 18);
-    } catch {}
+    } catch {
+      try {
+        const r = await mockApi.assets.getAll({ search: query });
+        const items = r.data || r || [];
+        const list = Array.isArray(items) ? items.slice(0, 10) : [];
+        setSearchResults(list);
+        if (list.length > 0 && list[0].latitude) mapRef.current?.flyTo([list[0].latitude, list[0].longitude], 18);
+      } catch {}
+    }
   };
 
   const tileUrl = mapType === 'satellite' ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
@@ -138,13 +159,18 @@ export default function MapPage() {
             <button onClick={async () => {
               if (!newCode.trim() || !addPos) return;
               try {
-                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                try {
                 await api.assets.create({
                   code: newCode, name: `CAJA ${newCode}`, assetTypeId: '8e3e137d-791b-43c3-8dc8-29fe15bda19d',
                   departmentId: 'a84105b4-eda4-4246-8361-8678d41bd0e7', municipalityId: 'e4ff7e38-cd79-452c-a1d3-370d7080adb4',
                   projectId: '068e3d5c-877c-4c51-b1d4-4dc16102aa35', latitude: addPos.lat, longitude: addPos.lng, status: 'ACTIVO',
                 });
                 await api.capacity?.update?.(newCode, { totalPorts: newPorts, freePorts: newFree, usedPorts: newPorts - newFree })?.catch?.() || null;
+              } catch {
+                await mockApi.assets.create({
+                  code: newCode, name: `CAJA ${newCode}`, latitude: addPos.lat, longitude: addPos.lng, status: 'ACTIVO',
+                });
+              }
                 setAddingCaja(false); setNewCode(''); alert('✅ Caja agregada'); loadGeoJSON();
               } catch { alert('Error'); }
             }} className="flex-1 px-3 py-2 bg-emerald-500 text-white rounded-xl text-xs font-semibold hover:bg-emerald-600">✅ Agregar</button>
@@ -258,6 +284,11 @@ export default function MapPage() {
               <button onClick={() => mapRef.current?.flyTo([5.15, -75.04], 15)} className="text-interplay-600 hover:text-interplay-700 font-semibold">📍 Fresno</button>
             </div>
           </div>
+        </div>}
+
+        {isOffline && <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-amber-50 border border-amber-200 text-amber-700 text-xs px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1.5">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 6a6 6 0 0 1 6 6"/><path d="M12 10a2 2 0 0 1 2 2"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+          Modo offline — datos de demostración
         </div>}
 
         {!panel && <button onClick={() => setPanel(true)} className="absolute top-4 left-20 z-10 bg-white/80 backdrop-blur rounded-xl shadow px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-white transition-all lg:static lg:flex lg:self-start lg:m-4">
