@@ -8,8 +8,7 @@ import { api } from '@/lib/api';
 
 const MapContainer = dynamic(() => import('react-leaflet').then((m) => m.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then((m) => m.TileLayer), { ssr: false });
-const Marker = dynamic(() => import('react-leaflet').then((m) => m.Marker), { ssr: false });
-const Popup = dynamic(() => import('react-leaflet').then((m) => m.Popup), { ssr: false });
+const DraggableMarker = dynamic(() => import('@/components/map/DraggableMarker'), { ssr: false });
 
 const S = {
   container: "max-w-2xl mx-auto space-y-4",
@@ -64,6 +63,7 @@ export default function FieldValidationPage() {
   const [newClient, setNewClient] = useState({ name: '', doc: '', addr: '' });
   const [isClient, setIsClient] = useState(false);
   const markerRef = useRef<any>(null);
+  const dragPosRef = useRef<{lat: number; lng: number} | null>(null);
   useEffect(() => { setIsClient(true); }, []);
 
   useEffect(() => {
@@ -97,6 +97,9 @@ export default function FieldValidationPage() {
       const userId = user.id || '00000000-0000-0000-0000-000000000000';
       const newObs = [obs, `Puertos: ${totalPorts}T / ${totalPorts - freePorts}U / ${freePorts}L`, fiberColor && `Fibra: ${fiberColor} ${fiberCount}h`].filter(Boolean).join('. ');
       await api.certification.validate(id, { userId, gpsLatitude: gps?.lat, gpsLongitude: gps?.lng, observations: newObs });
+      if (gps) {
+        await api.assets.update(id, { latitude: gps.lat, longitude: gps.lng }).catch(() => {});
+      }
       alert('✅ Caja validada correctamente');
       router.push('/certification/');
     } catch (e: any) { alert('Error: ' + (e?.message || 'desconocido')); }
@@ -132,20 +135,17 @@ export default function FieldValidationPage() {
             <button onClick={captureGps} className="w-full mb-3 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2">
               <SvgIcon html={Icons.gps} /> {gpsStatus || 'Capturar ubicación actual'}
             </button>
-            {gps && <p className="text-xs text-slate-400 mb-2 text-center">Arrastra el marcador sobre el mapa para ajustar la ubicación exacta</p>}
-            {gps && isClient && <div className="h-56 rounded-xl overflow-hidden border border-slate-200">
+            {gps && <p className="text-xs text-slate-400 mb-2 text-center">Arrastra el marcador 🟣 sobre el mapa para ajustar la ubicación exacta</p>}
+            {gps && isClient && <div className="h-56 rounded-xl overflow-hidden border border-slate-200 relative">
               <MapContainer center={[gps.lat, gps.lng]} zoom={19} className="h-full w-full" zoomControl={false} scrollWheelZoom={true}>
                 <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" attribution="" />
                 <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}" attribution="" opacity={0.5} />
-                <Marker position={[gps.lat, gps.lng]} draggable={true} ref={markerRef} eventHandlers={{ dragend: () => { const m = markerRef.current; if (m) { const p = m.getLatLng(); setGps({ lat: +p.lat.toFixed(5), lng: +p.lng.toFixed(5) }); } }}}>
-                  <Popup>📍 Arrastra a la ubicación exacta</Popup>
-                </Marker>
+                <DraggableMarker lat={gps.lat} lng={gps.lng} markerRef={markerRef} onMove={(lat, lng) => { setGps({ lat, lng }); markerRef.current = markerRef.current; }} />
               </MapContainer>
             </div>}
             {!gps && asset.latitude && isClient && <div className="h-40 rounded-xl overflow-hidden border border-slate-200 opacity-60">
               <MapContainer center={[asset.latitude, asset.longitude]} zoom={16} className="h-full w-full" zoomControl={false} scrollWheelZoom={false}>
                 <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" attribution="" />
-                <Marker position={[asset.latitude, asset.longitude]}><Popup>Ubicación actual</Popup></Marker>
               </MapContainer>
             </div>}
             {gps && <p className="text-xs text-slate-400 mt-2 text-center font-mono">{gps.lat}, {gps.lng}</p>}
