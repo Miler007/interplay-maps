@@ -10,18 +10,7 @@ const MapContainer = dynamic(() => import('react-leaflet').then((m) => m.MapCont
 const TileLayer = dynamic(() => import('react-leaflet').then((m) => m.TileLayer), { ssr: false });
 const GeoJSON = dynamic(() => import('react-leaflet').then((m) => m.GeoJSON), { ssr: false });
 const ZoomControl = dynamic(() => import('react-leaflet').then((m) => m.ZoomControl), { ssr: false });
-
-const MapClickHandler = dynamic(() => import('react-leaflet').then((m) => {
-  const { useMapEvents } = m;
-  return ({ onAddMode, onMapClick }: { onAddMode: boolean; onMapClick: (latlng: { lat: number; lng: number }) => void }) => {
-    useMapEvents({
-      click(e) {
-        if (onAddMode) onMapClick({ lat: +e.latlng.lat.toFixed(5), lng: +e.latlng.lng.toFixed(5) });
-      },
-    });
-    return null;
-  };
-}), { ssr: false });
+const MapClickHandler = dynamic(() => import('@/components/map/MapClickHandler'), { ssr: false });
 
 const iconColors: Record<string, string> = {
   CAJA: '#10b981', CAJAS: '#10b981', CLIENTE: '#6366f1',
