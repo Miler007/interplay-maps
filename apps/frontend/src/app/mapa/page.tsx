@@ -29,33 +29,13 @@ const MAP_TYPES = [
 const Svg = ({ html, className }: { html: string; className?: string }) =>
   <span className={className} dangerouslySetInnerHTML={{ __html: html }} />;
 
-function featureToPopup(feature: any) {
-  const p = feature.properties;
-  const color = iconColors[p.type] || '#64748b';
-  return `<div style="min-width:200px;font-family:system-ui,sans-serif">
-    <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
-      <span style="background:${color};color:white;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:600">${p.typeName || p.type}</span>
-      <span style="background:${p.status === 'ACTIVO' ? '#d1fae5' : '#fef3c7'};color:${p.status === 'ACTIVO' ? '#065f46' : '#92400e'};padding:2px 8px;border-radius:8px;font-size:11px;font-weight:600">${p.status}</span>
-    </div>
-    <div style="font-weight:700;font-size:14px;color:#0f172a">${p.name}</div>
-    <div style="font-size:11px;color:#64748b">${p.code}</div>
-    <div style="font-size:11px;color:#64748b;margin-top:2px">${p.department} / ${p.municipality}</div>
-    <div style="margin-top:6px;display:flex;gap:6px;font-size:11px">
-      <span style="background:#f1f5f9;padding:3px 6px;border-radius:6px;flex:1;text-align:center">Confianza <strong style="color:#0f172a">${p.confidenceScore || 0}%</strong></span>
-      <span style="background:#f1f5f9;padding:3px 6px;border-radius:6px;flex:1;text-align:center">Salud <strong style="color:#0f172a">${p.healthScore || 0}%</strong></span>
-    </div>
-    <button class="edit-asset-btn" data-id="${p.id}" data-code="${p.code}" data-name="${p.name}" data-type="${p.type}" data-lat="${feature.geometry.coordinates[1]}" data-lng="${feature.geometry.coordinates[0]}" style="margin-top:8px;width:100%;padding:5px 0;background:#f1f5f9;border:none;border-radius:8px;font-size:11px;font-weight:600;color:#0f172a;cursor:pointer">✏️ Editar</button></div>`;
-}
-
 function pointToLayer(feature: any, latlng: L.LatLng) {
   if (typeof window === 'undefined') return null;
   const L = require('leaflet');
   return L.circleMarker(latlng, { radius: 7, fillColor: iconColors[feature.properties?.type] || '#64748b', color: '#ffffff', weight: 2, opacity: 1, fillOpacity: 0.9 });
 }
 
-function onEachFeature(feature: any, layer: L.Layer) {
-  if (feature.properties) layer.bindPopup(featureToPopup(feature));
-}
+
 
 export default function MapPage() {
   const [geoJSON, setGeoJSON] = useState<any>(null);
@@ -74,6 +54,7 @@ export default function MapPage() {
   const [newCode, setNewCode] = useState('');
   const [newPorts, setNewPorts] = useState(16);
   const [newFree, setNewFree] = useState(16);
+  const [selectedFeature, setSelectedFeature] = useState<any>(null);
   const [editingFeature, setEditingFeature] = useState<{ id: string; code: string; name: string; type: string; lat: number; lng: number } | null>(null);
   const [editCode, setEditCode] = useState('');
   const [editName, setEditName] = useState('');
@@ -153,7 +134,9 @@ export default function MapPage() {
       <ZoomControl position="topright" />
       <TileLayer url={tileUrl} attribution="" />
       {mapType === 'hybrid' && <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}" opacity={0.5} />}
-      {geoJSON && <GeoJSON key={JSON.stringify(activeLayers)} data={geoJSON} pointToLayer={pointToLayer as any} onEachFeature={onEachFeature as any} />}
+      {geoJSON && <GeoJSON key={JSON.stringify(activeLayers)} data={geoJSON} pointToLayer={pointToLayer as any}
+        onEachFeature={(f: any, l: any) => { if (f.properties) l.on({ click: () => setSelectedFeature(f) }); }}
+      />}
       {addPos && addingCaja && <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 w-72">
         <p className="text-xs font-semibold text-slate-500 uppercase mb-2">Agregar caja en ubicación</p>
         <p className="text-xs text-slate-400 mb-3 font-mono">{addPos.lat.toFixed(5)}, {addPos.lng.toFixed(5)}</p>
@@ -191,6 +174,39 @@ export default function MapPage() {
         <div className="animate-pulse w-2 h-2 bg-white rounded-full" />
         Haz clic en el mapa para colocar la caja
       </div>}
+
+      {selectedFeature && !editingFeature && (() => {
+        const p = selectedFeature.properties;
+        const color = iconColors[p.type] || '#64748b';
+        return <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 w-72">
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex gap-1.5 flex-wrap">
+              <span className="text-[11px] font-bold text-white px-2 py-0.5 rounded-full" style={{ background: color }}>{p.typeName || p.type}</span>
+              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${p.status === 'ACTIVO' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{p.status}</span>
+            </div>
+            <button onClick={() => setSelectedFeature(null)} className="text-slate-300 hover:text-slate-500">✕</button>
+          </div>
+          <p className="text-sm font-bold text-slate-800">{p.name}</p>
+          <p className="text-xs text-slate-400">{p.code}</p>
+          <p className="text-xs text-slate-400 mt-0.5">{p.department} / {p.municipality}</p>
+          <div className="flex gap-2 mt-2 text-[11px]">
+            <span className="flex-1 bg-slate-50 rounded-lg px-2 py-1 text-center text-slate-500">Confianza <strong className="text-slate-800">{p.confidenceScore || 0}%</strong></span>
+            <span className="flex-1 bg-slate-50 rounded-lg px-2 py-1 text-center text-slate-500">Salud <strong className="text-slate-800">{p.healthScore || 0}%</strong></span>
+          </div>
+          <button onClick={() => {
+            setEditingFeature({
+              id: p.id, code: p.code, name: p.name, type: p.type,
+              lat: selectedFeature.geometry.coordinates[1],
+              lng: selectedFeature.geometry.coordinates[0],
+            });
+            setEditCode(p.code); setEditName(p.name);
+            setEditLat(selectedFeature.geometry.coordinates[1]);
+            setEditLng(selectedFeature.geometry.coordinates[0]);
+            setConfirmDelete(false);
+            setSelectedFeature(null);
+          }} className="w-full mt-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-semibold text-slate-700 transition-all">✏️ Editar</button>
+        </div>;
+      })()}
 
       {editingFeature && <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 w-80">
         <p className="text-xs font-semibold text-slate-500 uppercase mb-2">✏️ Editar {editingFeature.type}</p>
@@ -249,7 +265,7 @@ export default function MapPage() {
         }}
       />}
 
-      <MapClickHandler onAddMode={addModeActive} onMapClick={(pos) => { setAddPos(pos); setAddingCaja(true); setAddModeActive(false); }} onEditAsset={(asset) => { setEditingFeature(asset); setEditCode(asset.code); setEditName(asset.name); setEditLat(asset.lat); setEditLng(asset.lng); setConfirmDelete(false); }} />
+      <MapClickHandler onAddMode={addModeActive} onMapClick={(pos) => { setAddPos(pos); setAddingCaja(true); setAddModeActive(false); }} />
     </MapContainer>
   );
 
