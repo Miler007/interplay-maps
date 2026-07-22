@@ -314,7 +314,7 @@ export default function MapPage() {
             {mapType === 'hybrid' && <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}" opacity={0.5} />}
             <ScaleControl position="bottomleft" metric={true} imperial={false} />
             {filteredFeatures() && <GeoJSON key={JSON.stringify(activeLayers) + typeFilter + statusFilter + revision} data={filteredFeatures()!} pointToLayer={pointToLayer as any}
-              ref={(r: any) => { if (r && !geoLayerRef.current) geoLayerRef.current = r; }}
+              ref={(r: any) => { geoLayerRef.current = r; }}
               onEachFeature={(f: any, l: any) => { if (f.properties) l.on({
                 click: () => setSelectedFeature(f),
                 contextmenu: (e: any) => { e.originalEvent.preventDefault(); setCtxMenu({ x: e.originalEvent.clientX, y: e.originalEvent.clientY, lat: e.latlng.lat, lng: e.latlng.lng, feature: f }); },
@@ -484,24 +484,17 @@ export default function MapPage() {
                   </div>
                 </div>
                 <div className="flex gap-2 pt-1">
-                  <button onClick={async () => {
+                  <button onClick={() => {
                     if (!newCode.trim() || !addPos) return;
-                    try {
-                      await api.assets.create({
-                        code: newCode, name: `${addType} ${newCode}`, assetTypeId: '8e3e137d-791b-43c3-8dc8-29fe15bda19d',
-                        departmentId: 'a84105b4-eda4-4246-8361-8678d41bd0e7', municipalityId: 'e4ff7e38-cd79-452c-a1d3-370d7080adb4',
-                        projectId: '068e3d5c-877c-4c51-b1d4-4dc16102aa35', latitude: addPos.lat, longitude: addPos.lng, status: 'ACTIVO',
-                      });
-                      await api.capacity?.update?.(newCode, { totalPorts: newPorts, freePorts: newFree, usedPorts: newPorts - newFree })?.catch?.() || null;
-                    } catch { await mockApi.assets.create({ code: newCode, name: `${addType} ${newCode}`, latitude: addPos.lat, longitude: addPos.lng, status: 'ACTIVO' }); }
                     const newFeature = {
                       type: 'Feature',
                       geometry: { type: 'Point', coordinates: [addPos.lng, addPos.lat] },
-                      properties: { id: 'mock-' + Date.now(), type: addType, typeName: ASSET_TYPES.find(t => t.code === addType)?.label || addType, name: `${addType} ${newCode}`, code: newCode, status: 'ACTIVO', department: 'Tolima', municipality: 'Fresno', confidenceScore: 100, healthScore: 100 },
+                      properties: { id: 'mock-' + Date.now(), type: addType, typeName: ASSET_TYPES.find(t => t.code === addType)?.label || addType, name: `${addType} ${newCode}`, code: newCode, status: 'ACTIVO', department: 'Tolima', municipality: 'Fresno', confidenceScore: 100, healthScore: 100, totalPorts: newPorts, freePorts: newFree, usedPorts: newPorts - newFree },
                     };
                     setGeoJSON((prev: any) => { if (!prev) return prev; return { ...prev, features: [...prev.features, newFeature] }; });
                     setRevision(r => r + 1);
                     setAddingCaja(false); setAddModeActive(false); setNewCode(''); setAddPos(null);
+                    api.assets.create({ code: newCode, name: `${addType} ${newCode}`, latitude: addPos.lat, longitude: addPos.lng, status: 'ACTIVO' }).catch(() => mockApi.assets.create({ code: newCode, name: `${addType} ${newCode}`, latitude: addPos.lat, longitude: addPos.lng, status: 'ACTIVO' }).catch(() => {}));
                   }} className="flex-1 px-3 py-2 bg-emerald-500 text-white rounded-xl text-xs font-semibold hover:bg-emerald-600">✅ Crear</button>
                   <button onClick={() => { setAddingCaja(false); setAddModeActive(false); setAddPos(null); }} className="px-3 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-200">✕</button>
                 </div>
