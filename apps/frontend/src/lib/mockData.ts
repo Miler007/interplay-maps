@@ -132,9 +132,44 @@ export const mockApi = {
       }
       return Promise.resolve({ data: items });
     },
-    create: (data: any) => Promise.resolve({ id: 'mock-' + Date.now(), ...data }),
-    update: (id: string, data: any) => Promise.resolve({ id, ...data }),
-    delete: (id: string) => Promise.resolve({ success: true }),
+    create: (data: any) => {
+      if (!cachedGeoJSON) cachedGeoJSON = generateFeatures();
+      const newFeature = {
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [data.longitude || 0, data.latitude || 0] },
+        properties: {
+          id: 'mock-' + Date.now(),
+          type: data.type || 'CAJA',
+          typeName: (data.type === 'CAJA' ? 'Caja FTTH' : data.type === 'NODO' ? 'Nodo Óptico' : data.type === 'POSTE' ? 'Poste' : data.type === 'CLIENTE' ? 'Cliente' : data.type === 'CTO' ? 'CTO' : data.type === 'SPLITTER' ? 'Splitter' : data.type === 'MUFLAS' ? 'Mufa' : 'Activo'),
+          name: data.name || `CAJA ${data.code}`,
+          code: data.code,
+          status: data.status || 'ACTIVO',
+          department: 'Tolima',
+          municipality: 'Fresno',
+          confidenceScore: 100,
+          healthScore: 100,
+        },
+      };
+      cachedGeoJSON.features.push(newFeature as any);
+      return Promise.resolve({ id: newFeature.properties.id, ...data });
+    },
+    update: (id: string, data: any) => {
+      if (!cachedGeoJSON) cachedGeoJSON = generateFeatures();
+      const feat: any = cachedGeoJSON.features.find((f: any) => f.properties?.id === id);
+      if (feat && feat.properties) {
+        if (data.code) feat.properties.code = data.code;
+        if (data.name) feat.properties.name = data.name;
+        if (data.latitude !== undefined) feat.geometry.coordinates[1] = data.latitude;
+        if (data.longitude !== undefined) feat.geometry.coordinates[0] = data.longitude;
+      }
+      return Promise.resolve({ id, ...data });
+    },
+    delete: (id: string) => {
+      if (cachedGeoJSON) {
+        cachedGeoJSON.features = cachedGeoJSON.features.filter((f: any) => f.properties?.id !== id);
+      }
+      return Promise.resolve({ success: true });
+    },
   },
   capacity: {
     update: (code: string, data: any) => Promise.resolve({ code, ...data }),
